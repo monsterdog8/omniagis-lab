@@ -9,7 +9,8 @@ import pytest
 
 from omniagis.audit.cold_pass import ColdPass, ColdPassReport
 
-REPO_ROOT = "/home/runner/work/omniagis-lab/omniagis-lab"
+# Locate repo root dynamically: tests/ lives one level below the repo root.
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 VALID_VERDICTS = {"PASS", "PARTIAL PASS", "NO PASS"}
 
 

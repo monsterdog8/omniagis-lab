@@ -68,7 +68,7 @@ def build_scorecard(
         m2_detail = "No files to classify"
     elif unknown_count / total_files > 0.5:
         m2_status = "PARTIAL PASS"
-        m2_detail = f"{unknown_count}/{total_files} files are UNKNOWN type ({100*unknown_count//total_files}%)"
+        m2_detail = f"{unknown_count}/{total_files} files are UNKNOWN type ({int(100 * _pct(unknown_count, total_files))}%)"
     else:
         m2_status = "PASS"
         m2_detail = (
@@ -165,13 +165,9 @@ def build_scorecard(
     # M7 — Missing dependencies (requirements.txt)
     # ------------------------------------------------------------------
     import importlib.util as _ilu
+    from pathlib import Path as _Path
 
-    req_path = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(
-            os.path.abspath(__file__)
-        )))),
-        "requirements.txt",
-    )
+    req_path = str(_Path(__file__).parents[3] / "requirements.txt")
     missing_deps: List[str] = []
     req_packages: List[str] = []
 
