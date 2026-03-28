@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "omniagis"
+version = "0.1.0"
+description = "Fail-closed scientific validation framework for dynamical systems using return-time statistics and ε-robustness"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {file = "LICENSE"}
+dependencies = ["numpy>=1.24.0"]
+
+[project.scripts]
+omniagis = "omniagis.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
