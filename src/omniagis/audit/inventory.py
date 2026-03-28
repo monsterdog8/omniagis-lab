@@ -79,6 +79,29 @@ _EXT_MAP: Dict[str, str] = {
 
 _SKIP_DIRS = {".git", "__pycache__", ".mypy_cache", ".pytest_cache", ".tox", ".venv", "venv", ".eggs"}
 
+# Extension-less filenames that can still be classified by exact name
+_FILENAME_MAP: Dict[str, str] = {
+    "license": DOC,
+    "licence": DOC,
+    "readme": DOC,
+    "changelog": DOC,
+    "changes": DOC,
+    "authors": DOC,
+    "contributors": DOC,
+    "notice": DOC,
+    "makefile": SPEC,
+    "dockerfile": SPEC,
+    "vagrantfile": SPEC,
+    "gemfile": SPEC,
+    ".gitignore": SPEC,
+    ".gitattributes": SPEC,
+    ".editorconfig": SPEC,
+    ".flake8": SPEC,
+    ".pylintrc": SPEC,
+    ".pre-commit-config.yaml": SPEC,
+    "procfile": SPEC,
+}
+
 
 @dataclass
 class FileRecord:
@@ -101,7 +124,12 @@ class InventoryReport:
 
 
 def _classify_file(path: str) -> str:
-    ext = os.path.splitext(path)[1].lower()
+    fname = os.path.basename(path)
+    # Check exact filename match first (case-insensitive, handles dotfiles)
+    lower_name = fname.lower()
+    if lower_name in _FILENAME_MAP:
+        return _FILENAME_MAP[lower_name]
+    ext = os.path.splitext(fname)[1].lower()
     return _EXT_MAP.get(ext, UNKNOWN)
 
 
@@ -135,7 +163,10 @@ class FileInventory:
 
         for dirpath, dirnames, filenames in os.walk(root):
             # Prune directories we never want to recurse into
-            dirnames[:] = [d for d in dirnames if d not in _SKIP_DIRS]
+            dirnames[:] = [
+                d for d in dirnames
+                if d not in _SKIP_DIRS and not d.endswith(".egg-info")
+            ]
 
             for fname in sorted(filenames):
                 fpath = os.path.join(dirpath, fname)

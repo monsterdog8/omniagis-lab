@@ -118,7 +118,10 @@ class ParsabilityChecker:
         results: List[ParseResult] = []
         skip_dirs = {".git", "__pycache__", ".mypy_cache", ".pytest_cache", ".tox", ".venv", "venv"}
         for dirpath, dirnames, filenames in os.walk(path):
-            dirnames[:] = [d for d in dirnames if d not in skip_dirs]
+            dirnames[:] = [
+                d for d in dirnames
+                if d not in skip_dirs and not d.endswith(".egg-info")
+            ]
             for fname in sorted(filenames):
                 if fname.endswith(".py"):
                     results.append(self.check_file(os.path.join(dirpath, fname)))
@@ -129,7 +132,13 @@ class ParsabilityChecker:
 
         A file of only comments, docstrings, ``pass`` statements, or string
         literals is considered pseudo-code.
+
+        ``__init__.py`` files are excluded from this check: they legitimately
+        contain only imports and re-exports and must not be classified as
+        pseudo-code.
         """
+        if os.path.basename(path) == "__init__.py":
+            return False
         try:
             with open(path, "r", encoding="utf-8", errors="replace") as fh:
                 source = fh.read()
