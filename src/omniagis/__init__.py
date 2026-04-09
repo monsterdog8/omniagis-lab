@@ -48,6 +48,21 @@ from .audit import (
     ColdPass,
 )
 
+# Scientific validation engine (validatorgate_full)
+from .validatorgate_full import (
+    ValidationConfig,
+    PowerLawFit,
+    PlateauResult,
+    MultiScaleCI,
+    compute_return_times,
+    survival_function,
+    fit_power_law_tail,
+    detect_plateau,
+    bootstrap_ci,
+    multi_scale_ci,
+    validate,
+)
+
 __all__ = [
     # Version
     "__version__",
@@ -60,4 +75,16 @@ __all__ = [
     "ParsabilityChecker",
     "build_scorecard",
     "ColdPass",
+    # Scientific validation engine
+    "ValidationConfig",
+    "PowerLawFit",
+    "PlateauResult",
+    "MultiScaleCI",
+    "compute_return_times",
+    "survival_function",
+    "fit_power_law_tail",
+    "detect_plateau",
+    "bootstrap_ci",
+    "multi_scale_ci",
+    "validate",
 ]
