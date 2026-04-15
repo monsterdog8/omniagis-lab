@@ -6,7 +6,7 @@ import sys
 
 
 def main(argv: list[str] | None = None) -> None:
-    args = list(sys.argv[1:] if argv is None else argv)
+    args = sys.argv[1:] if argv is None else argv
 
     if args and args[0] == "benchmark":
         from omniagis.exp_rt_runner import main as benchmark_main
