@@ -13,6 +13,7 @@ from omniagis.audit.bundle import (
     FAIL_CLOSED,
     PARTIAL_PASS,
     PASS,
+    REASON_ARTIFACT_MISSING,
     REASON_CHAIN_HASH_MISMATCH,
     REASON_CHAIN_NO_PREV,
     REASON_CHAIN_OK,
@@ -106,6 +107,7 @@ class TestPresenceCheck:
         report = BundleAuditor().audit(str(mpath))
         assert report.global_verdict == FAIL_CLOSED
         assert report.n_missing == 1
+        assert REASON_ARTIFACT_MISSING in report.fail_reasons
 
 
 # ---------------------------------------------------------------------------

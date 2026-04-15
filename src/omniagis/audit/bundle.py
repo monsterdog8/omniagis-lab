@@ -77,6 +77,7 @@ REASON_CHAIN_NO_PREV = "CHAIN_NO_PREV"        # no predecessor declared (base)
 REASON_CHAIN_PREV_MISSING = "CHAIN_PREVIOUS_ARTIFACT_MISSING"
 REASON_CHAIN_HASH_MISMATCH = "CHAIN_HASH_MISMATCH"
 REASON_CHAIN_SKIPPED = "CHAIN_SKIPPED"        # artifact absent — chain not checked
+REASON_ARTIFACT_MISSING = "ARTIFACT_MISSING"  # declared artifact not found on disk
 
 
 # ---------------------------------------------------------------------------
@@ -192,17 +193,17 @@ class BundleAuditReport:
         reasons: list[str] = []
         for r in self.results:
             if not r.present:
-                reasons.append(REASON_CHAIN_PREV_MISSING)
+                reasons.append(REASON_ARTIFACT_MISSING)
             elif r.hash_reason == REASON_HASH_INVALID:
                 reasons.append(REASON_HASH_INVALID)
             elif r.chain_reason in (REASON_CHAIN_PREV_MISSING, REASON_CHAIN_HASH_MISMATCH):
                 reasons.append(r.chain_reason)
         seen: set[str] = set()
         deduped: list[str] = []
-        for r in reasons:
-            if r not in seen:
-                seen.add(r)
-                deduped.append(r)
+        for reason in reasons:
+            if reason not in seen:
+                seen.add(reason)
+                deduped.append(reason)
         return deduped
 
 
@@ -385,8 +386,10 @@ class BundleAuditor:
         # Artifact detail table
         lines += [divider, "ARTIFACT DETAIL", thin]
         headers = ["Name", "Present", "Hash", "Chain", "Verdict"]
-        col_widths = [max(len(h), max((len(str(_cell(r, i))) for r in report.results), default=0))
-                      for i, h in enumerate(headers)]
+        col_widths = [
+            max(len(h), max((len(_cell(r, i)) for r in report.results), default=0))
+            for i, h in enumerate(headers)
+        ]
 
         def fmt_row(cells: List[str]) -> str:
             return "  ".join(str(c).ljust(col_widths[i]) for i, c in enumerate(cells))
