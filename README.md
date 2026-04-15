@@ -37,11 +37,23 @@ pip install numpy pytest
 ```bash
 # Audit the current directory
 python -m omniagis.cli .
+# (equivalent package entrypoint)
+python -m omniagis .
 
 # Audit a specific path with JSON output
 python -m omniagis.cli /path/to/project --output json
 
 # Exit codes: 0=PASS, 1=PARTIAL PASS, 2=NO PASS
+```
+
+## Benchmark Modes
+
+```bash
+# Single benchmark run (Pomeau-Manneville return-time experiment)
+python -m omniagis benchmark --z 1.5 --epsilon 0.1 --output result.json
+
+# Multi-ε benchmark sweep
+python -m omniagis benchmark-sweep --z 1.5 --output sweep.json
 ```
 
 ## Output Sections (A–G)
