@@ -53,7 +53,7 @@ python -m omniagis.cli /path/to/project --output json
 python -m omniagis benchmark --z 1.5 --epsilon 0.1 --output result.json
 
 # Multi-ε benchmark sweep
-python -m omniagis benchmark-sweep --z 1.5 --output sweep.json
+python -m omniagis benchmark-sweep --z 1.5 --n-epsilons 10 --output sweep.json
 ```
 
 ## Output Sections (A–G)
