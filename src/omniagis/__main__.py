@@ -8,13 +8,13 @@ import sys
 def main(argv: list[str] | None = None) -> None:
     args = list(sys.argv[1:] if argv is None else argv)
 
-    if args and args[0] in {"benchmark", "benchmark-external"}:
+    if args and args[0] == "benchmark":
         from omniagis.exp_rt_runner import main as benchmark_main
 
         benchmark_main(args[1:])
         return
 
-    if args and args[0] in {"benchmark-sweep", "benchmark-world"}:
+    if args and args[0] == "benchmark-sweep":
         from omniagis.epsilon_sweep import main as sweep_main
 
         sweep_main(args[1:])
