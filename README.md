@@ -56,6 +56,49 @@ python -m omniagis benchmark --z 1.5 --epsilon 0.1 --output result.json
 python -m omniagis benchmark-sweep --z 1.5 --n-epsilons 10 --output sweep.json
 ```
 
+## Bundle Audit (v5.1 — manifest hash + chain validation)
+
+Verifies that every artifact declared in a JSON manifest exists, matches its
+declared SHA-256 hash, and that its append-only chain link to a predecessor
+artifact is intact. Any failure triggers **FAIL_CLOSED**.
+
+```bash
+# Audit a bundle manifest
+python -m omniagis bundle /path/to/manifest.json
+
+# JSON output
+python -m omniagis bundle /path/to/manifest.json --output json
+
+# Exit codes: 0=PASS, 1=PARTIAL PASS, 2=FAIL_CLOSED
+```
+
+Manifest format (`manifest.json`):
+
+```json
+{
+    "version": "5.1",
+    "name": "my-bundle",
+    "description": "...",
+    "artifacts": [
+        {
+            "name": "main_output",
+            "path": "relative/or/absolute/path/to/file.json",
+            "sha256": "<sha256-hex>",
+            "prev_artifact_path": "path/to/previous.json",
+            "prev_artifact_sha256": "<sha256-hex>",
+            "synthetic_demo": false
+        }
+    ]
+}
+```
+
+| Check | Logic |
+|-------|-------|
+| **Presence** | Artifact file must exist on disk |
+| **Hash** | SHA-256 of file must match declared `sha256` |
+| **Chain** | `prev_artifact_path` must exist; `prev_artifact_sha256` must match |
+| **Global** | Any failure → `FAIL_CLOSED`; all hashes verified → `PASS`; else `PARTIAL PASS` |
+
 ## Output Sections (A–G)
 
 | Section | Description |

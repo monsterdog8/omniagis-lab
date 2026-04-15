@@ -8,6 +8,12 @@ import sys
 def main(argv: list[str] | None = None) -> None:
     args = sys.argv[1:] if argv is None else argv
 
+    if args and args[0] == "bundle":
+        from omniagis.audit.bundle import main as bundle_main
+
+        bundle_main(args[1:])
+        return
+
     if args and args[0] == "benchmark":
         from omniagis.exp_rt_runner import main as benchmark_main
 

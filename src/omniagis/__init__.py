@@ -46,6 +46,7 @@ from .audit import (
     ParsabilityChecker,
     build_scorecard,
     ColdPass,
+    BundleAuditor,
 )
 
 # Scientific validation engine (validatorgate_full)
@@ -75,6 +76,7 @@ __all__ = [
     "ParsabilityChecker",
     "build_scorecard",
     "ColdPass",
+    "BundleAuditor",
     # Scientific validation engine
     "ValidationConfig",
     "PowerLawFit",
