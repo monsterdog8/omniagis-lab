@@ -34,7 +34,7 @@ def test_run_epsilon_sweep_rejects_invalid_inputs(
         epsilon_sweep.run_epsilon_sweep(params)
 
 
-def test_exp_rt_runner_main_output_file_is_json_only(tmp_path, capsys, monkeypatch) -> None:
+def test_exp_rt_runner_main_writes_json_without_stderr(tmp_path, capsys, monkeypatch) -> None:
     out_path = tmp_path / "result.json"
     monkeypatch.setattr(
         exp_rt_runner,
@@ -48,7 +48,7 @@ def test_exp_rt_runner_main_output_file_is_json_only(tmp_path, capsys, monkeypat
     assert capsys.readouterr().err == ""
 
 
-def test_epsilon_sweep_main_output_file_is_json_only(tmp_path, capsys, monkeypatch) -> None:
+def test_epsilon_sweep_main_writes_json_without_stderr(tmp_path, capsys, monkeypatch) -> None:
     out_path = tmp_path / "sweep.json"
     monkeypatch.setattr(
         epsilon_sweep,

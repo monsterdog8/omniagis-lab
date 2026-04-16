@@ -86,7 +86,8 @@ def survival_function(
 
     Returns
     -------
-    ns : int64 array  1 .. min(max(tau), max_n) when ``max_n`` is set
+    ns : int64 array  1 .. max(tau) when ``max_n`` is None, else
+        1 .. min(max(tau), max_n)
     S  : float64 array  S[i] = fraction of tau strictly greater than ns[i]
     Returns empty arrays if ``tau`` is empty or ``max_n < 1``.
     """
