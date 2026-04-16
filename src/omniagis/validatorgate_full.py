@@ -76,21 +76,28 @@ def compute_return_times(
 
 def survival_function(
     tau: NDArray[np.int64],
+    max_n: Optional[int] = None,
 ) -> tuple[NDArray[np.int64], NDArray[np.float64]]:
     """Empirical survival function S(n) = P(tau > n).
 
     Uses np.searchsorted on the sorted tau array for O(max_tau * log N) time.
+    By default computes the dense range n = 1..max(tau); ``max_n`` can be
+    provided to cap the largest n evaluated.
 
     Returns
     -------
-    ns : int64 array  1 .. max(tau)
+    ns : int64 array  1 .. min(max(tau), max_n) when ``max_n`` is set
     S  : float64 array  S[i] = fraction of tau strictly greater than ns[i]
     """
     if tau.size == 0:
         return np.empty(0, dtype=np.int64), np.empty(0, dtype=np.float64)
     tau_sorted = np.sort(tau)
     N = tau_sorted.size
-    ns = np.arange(1, int(tau_sorted[-1]) + 1, dtype=np.int64)
+    max_tau = int(tau_sorted[-1])
+    upper_n = max_tau if max_n is None else min(int(max_n), max_tau)
+    if upper_n < 1:
+        return np.empty(0, dtype=np.int64), np.empty(0, dtype=np.float64)
+    ns = np.arange(1, upper_n + 1, dtype=np.int64)
     # count(tau > n) = N - (# elements <= n) = N - searchsorted(side='right')
     counts = N - np.searchsorted(tau_sorted, ns, side="right")
     S = counts.astype(np.float64) / N
@@ -168,8 +175,10 @@ def fit_power_law_tail(
     # Tail mask:
     #  - n >= n_min
     #  - S(n) > 0  (log is defined)
-    #  - count(tau > n) = S(n) * N >= min_tail_obs  (sufficient observations)
-    obs_counts = np.round(S * N).astype(np.int64)
+    #  - count(tau > n) >= min_tail_obs  (sufficient observations)
+    #    computed exactly from tau (avoid floating-point reconstruction)
+    tau_sorted = np.sort(tau)
+    obs_counts = N - np.searchsorted(tau_sorted, ns, side="right")
     tail_mask = (ns >= n_min) & (S > 0.0) & (obs_counts >= min_tail_obs)
     ns_t = ns[tail_mask]
     S_t = S[tail_mask]
@@ -468,13 +477,16 @@ def multi_scale_ci(
         alpha_hat_out.append(a_hat)
         n_valid_out.append(nv)
 
-    # CI shrink check: widths must strictly decrease as sample size increases.
+    # CI shrink check: widths must decrease as sample size increases.
     # width[0] = largest sample size N   → narrowest CI
     # width[2] = smallest sample size N/4 → widest CI
+    s0, s1, s2 = scales_out[0], scales_out[1], scales_out[2]
     w0, w1, w2 = width_out[0], width_out[1], width_out[2]
     ci_shrinks = (
         math.isfinite(w0) and math.isfinite(w1) and math.isfinite(w2)
-        and w2 > w1 > w0
+        and s0 >= s1 >= s2
+        and ((s0 > s1 and w1 > w0) or (s0 == s1 and w1 >= w0))
+        and ((s1 > s2 and w2 > w1) or (s1 == s2 and w2 >= w1))
     )
 
     return MultiScaleCI(
@@ -548,6 +560,7 @@ def validate(
     trajectory: NDArray[np.float64],
     in_target: Callable[[NDArray[np.float64]], NDArray[np.bool_]],
     config: Optional[ValidationConfig] = None,
+    rng: Optional[np.random.Generator] = None,
 ) -> dict:
     """Run full fail-closed validation on a trajectory.
 
@@ -560,6 +573,9 @@ def validate(
         Example: ``lambda x: (x >= 0.0) & (x <= epsilon)``
     config :
         Validation parameters (default: :class:`ValidationConfig`).
+    rng :
+        Optional random generator. When omitted, a generator is created from
+        ``config.seed`` for deterministic results.
 
     Returns
     -------
@@ -581,7 +597,8 @@ def validate(
     if config is None:
         config = ValidationConfig()
 
-    rng = np.random.default_rng(config.seed)
+    if rng is None:
+        rng = np.random.default_rng(config.seed)
     fail_reasons: list[str] = []
 
     # ------------------------------------------------------------------

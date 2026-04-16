@@ -32,7 +32,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import sys
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from typing import Optional
@@ -128,6 +127,9 @@ def run_experiment(params: ExperimentParams) -> dict:
     Returns a JSON-serialisable dict containing experiment metadata and
     the complete structured validation report (all six checks).
     """
+    if params.z <= 1.0:
+        raise ValueError(f"z must be > 1.0, got {params.z}")
+
     rng = np.random.default_rng(params.seed)
     traj = generate_trajectory(params.z, params.n_steps, params.x0, rng=rng)
 
@@ -145,7 +147,7 @@ def run_experiment(params: ExperimentParams) -> dict:
         seed=params.seed,
     )
 
-    report = validate(traj, in_target, config=config)
+    report = validate(traj, in_target, config=config, rng=rng)
 
     return {
         "experiment": asdict(params),
@@ -213,7 +215,6 @@ def main(argv: Optional[list[str]] = None) -> None:
     if args.output:
         with open(args.output, "w") as fh:
             fh.write(output_json)
-        print(f"Report written to {args.output}", file=sys.stderr)
     else:
         print(output_json)
 

@@ -31,7 +31,6 @@ from __future__ import annotations
 import argparse
 import json
 import math
-import sys
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from typing import Optional
@@ -50,10 +49,11 @@ def _validate_for_epsilon(
     trajectory: np.ndarray,
     epsilon: float,
     config: ValidationConfig,
+    rng: Optional[np.random.Generator] = None,
 ) -> dict:
     """Run validation for one ε value; return a structured result row."""
     in_target = lambda x: (x >= 0.0) & (x <= epsilon)
-    report = validate(trajectory, in_target, config=config)
+    report = validate(trajectory, in_target, config=config, rng=rng)
 
     pl = report["diagnostics"]["power_law"]
     ms = report["diagnostics"]["multi_scale_ci"]
@@ -150,6 +150,13 @@ def run_epsilon_sweep(params: SweepParams) -> dict:
     ``results``
         Per-ε structured result rows (one per ε value).
     """
+    if params.z <= 1.0:
+        raise ValueError(f"z must be > 1.0, got {params.z}")
+    if params.epsilon_min <= 0.0 or params.epsilon_max <= 0.0:
+        raise ValueError("epsilon_min and epsilon_max must be > 0")
+    if params.epsilon_min > params.epsilon_max:
+        raise ValueError("epsilon_min must be <= epsilon_max")
+
     rng = np.random.default_rng(params.seed)
     traj = generate_trajectory(params.z, params.n_steps, params.x0, rng=rng)
     theory_alpha = 1.0 / (params.z - 1.0)
@@ -172,7 +179,7 @@ def run_epsilon_sweep(params: SweepParams) -> dict:
     )
 
     results = [
-        _validate_for_epsilon(traj, float(eps), config)
+        _validate_for_epsilon(traj, float(eps), config, rng=rng)
         for eps in epsilons
     ]
 
@@ -299,7 +306,6 @@ def main(argv: Optional[list[str]] = None) -> None:
     if args.output:
         with open(args.output, "w") as fh:
             fh.write(output_json)
-        print(f"Sweep report written to {args.output}", file=sys.stderr)
     else:
         print(output_json)
 
