@@ -4,7 +4,8 @@ GO OMNIÆGIS Audit Module — Mode MAVERICK
 ==========================================
 
 This module provides comprehensive code quality auditing capabilities for Python
-projects using the Mode MAVERICK protocol (M1–M12 scorecard + outputs A–G).
+projects using the Mode MAVERICK protocol (M1–M12 scorecard + outputs A–G), plus
+bundle manifest auditing with SHA-256 hash and append-only chain validation.
 
 Components:
 -----------
@@ -33,6 +34,13 @@ ColdPass:
         F. Validation plan (steps to reach global PASS)
         G. Minimal core (essential files to keep)
 
+BundleAuditor:
+    Manifest-based bundle auditor (v5.1). Reads a JSON manifest declaring
+    artifacts with SHA-256 hashes and optional append-only chain links, then
+    verifies presence, hash integrity, and chain continuity using fail-closed
+    logic. Verdict is FAIL_CLOSED if any artifact is missing, any hash
+    mismatches, or any chain link is broken.
+
 M1–M12 Metrics:
 ---------------
     M1:  File inventory completeness
@@ -56,17 +64,17 @@ Usage:
     >>> print(report.global_verdict)  # "PASS" | "PARTIAL PASS" | "NO PASS"
     >>> print(auditor.render(report))  # Full A–G report
 
-    >>> from omniagis.audit import FileInventory, ParsabilityChecker, build_scorecard
-    >>> inventory = FileInventory().build("/path")
-    >>> parse_results = ParsabilityChecker().check_directory("/path")
-    >>> scorecard = build_scorecard(inventory, parse_results)
-    >>> for entry in scorecard:
-    ...     print(f"{entry.metric_id}: {entry.status} — {entry.detail}")
+    >>> from omniagis.audit import BundleAuditor
+    >>> auditor = BundleAuditor()
+    >>> report = auditor.audit("/path/to/manifest.json")
+    >>> print(report.global_verdict)  # "PASS" | "PARTIAL PASS" | "FAIL_CLOSED"
+    >>> print(auditor.render(report))
 """
 
 from .inventory import FileInventory
 from .parsability import ParsabilityChecker
 from .scorecard import build_scorecard
 from .cold_pass import ColdPass
+from .bundle import BundleAuditor
 
-__all__ = ["FileInventory", "ParsabilityChecker", "build_scorecard", "ColdPass"]
+__all__ = ["FileInventory", "ParsabilityChecker", "build_scorecard", "ColdPass", "BundleAuditor"]
