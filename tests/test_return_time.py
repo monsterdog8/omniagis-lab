@@ -8,6 +8,16 @@ import pytest
 from omniagis.core.return_time import ReturnTimeStatistics
 
 
+class TestInit:
+    def test_negative_tolerance_raises(self):
+        with pytest.raises(ValueError):
+            ReturnTimeStatistics(tolerance=-0.001)
+
+    def test_zero_tolerance_ok(self):
+        rts = ReturnTimeStatistics(tolerance=0.0)
+        assert rts.tolerance == 0.0
+
+
 class TestFindReturns:
     def test_periodic_sine(self) -> None:
         """Sine wave hits 0 twice per period; returns should be ~evenly spaced."""
