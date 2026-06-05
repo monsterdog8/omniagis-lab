@@ -40,3 +40,16 @@ def test_main_delegates_to_epsilon_sweep(monkeypatch):
     main(["benchmark-sweep", "--n-epsilons", "5"])
 
     assert captured_args["argv"] == ["--n-epsilons", "5"]
+
+
+def test_main_delegates_to_bundle(monkeypatch):
+    captured_args: dict[str, list[str]] = {}
+
+    def fake_bundle(argv):
+        captured_args["argv"] = argv
+
+    monkeypatch.setattr("omniagis.audit.bundle.main", fake_bundle)
+
+    main(["bundle", "manifest.json", "--output", "json"])
+
+    assert captured_args["argv"] == ["manifest.json", "--output", "json"]

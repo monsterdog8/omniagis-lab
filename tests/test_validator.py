@@ -76,6 +76,25 @@ class TestVerdict:
         assert v.verdict(traj, ref).status == "PASS"
 
 
+class Test1DTrajectory:
+    def test_1d_pass(self):
+        """1-D (non-matrix) trajectories take the abs branch."""
+        v = EpsilonRobustnessValidator(epsilon=0.1)
+        traj = np.array([1.0, 2.0, 3.0, 4.0])
+        ref = np.array([1.0, 2.0, 3.0, 4.0])
+        result = v.validate(traj, ref)
+        assert result.status == "PASS"
+        assert result.max_dist == pytest.approx(0.0)
+
+    def test_1d_partial_pass(self):
+        v = EpsilonRobustnessValidator(epsilon=0.1)
+        ref = np.zeros(50)
+        traj = ref.copy()
+        traj[0] = 0.5   # max > eps, mean << eps
+        result = v.validate(traj, ref)
+        assert result.status == "PARTIAL PASS"
+
+
 class TestNegativeEpsilon:
     def test_raises(self) -> None:
         with pytest.raises(ValueError):

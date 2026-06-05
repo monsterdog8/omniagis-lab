@@ -16,6 +16,17 @@ omniagis = "omniagis.cli:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = "--cov=omniagis --cov-fail-under=93"
+
+[tool.coverage.run]
+source = ["omniagis"]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "if __name__ == .__main__.:",
+    "pragma: no cover",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]
