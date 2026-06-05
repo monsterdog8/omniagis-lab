@@ -11,6 +11,11 @@ Modules:
   manifest     — file hashing, type classification, manifest building
   benchmark    — stdlib-only linear model, MSE scoring, prediction lock comparator
   promotion    — promotion gate engine, SEAL artifact continuity, JSONL ledger replay
+  coherence    — Shannon entropy, mutual information, coherence passports (hash-sealed)
+  audit_claims — scientific claim auditing with 7-section canonical reports
+  score_report — scoring engine for canonical audit reports (7 components, 100 pts)
+  dynamics     — coupled continuum state dynamics + fractal coherence tracking
+  spectral_gap — Ulam spectral gap for Pomeau-Manneville maps (requires numpy)
   cli          — unified command-line interface
 """
 from gpts_core.signals import analyze as analyze_signal, structure_score
@@ -47,6 +52,52 @@ from gpts_core.promotion import (
     replay_jsonl_ledger,
     validate_seal_ledger,
 )
+from gpts_core.coherence import (
+    shannon_entropy,
+    joint_entropy,
+    mutual_information,
+    global_coherence,
+    digitize,
+    compute_metric_fields,
+    build_coherence_passport,
+    seal_passport_hashes,
+    validate_coherence_passport,
+)
+from gpts_core.audit_claims import (
+    audit_claim,
+    inspect_document,
+    validate_canonical_report,
+    batch_audit,
+    decompose_claim,
+    extract_evidence,
+    AuditReport,
+    Weakness,
+    VERDICTS,
+    WEAKNESS_TYPES,
+    STRICT_SECTIONS,
+)
+from gpts_core.score_report import (
+    evaluate as evaluate_report,
+    score_audit_report,
+    extract_sections,
+    extract_verdict,
+    extract_confidence,
+    score_verdicts,
+    score_critical_points,
+    score_confidence,
+    score_discriminant_tests,
+    score_probative_separation,
+    score_weakness_taxonomy,
+    score_fail_closed,
+)
+from gpts_core.dynamics import (
+    ContinuumState,
+    step_continuum,
+    energy as continuum_energy,
+    run_continuum,
+    FractalState,
+    FractalEngine,
+)
 
 __all__ = [
     # signals
@@ -69,4 +120,23 @@ __all__ = [
     "train_linear", "predict_linear", "mse_score", "compare_prediction_lock",
     # promotion
     "evaluate_promotion", "replay_jsonl_ledger", "validate_seal_ledger",
+    # coherence
+    "shannon_entropy", "joint_entropy", "mutual_information", "global_coherence",
+    "digitize", "compute_metric_fields",
+    "build_coherence_passport", "seal_passport_hashes", "validate_coherence_passport",
+    # audit_claims
+    "audit_claim", "inspect_document", "validate_canonical_report", "batch_audit",
+    "decompose_claim", "extract_evidence",
+    "AuditReport", "Weakness", "VERDICTS", "WEAKNESS_TYPES", "STRICT_SECTIONS",
+    # score_report
+    "evaluate_report", "score_audit_report",
+    "extract_sections", "extract_verdict", "extract_confidence",
+    "score_verdicts", "score_critical_points", "score_confidence",
+    "score_discriminant_tests", "score_probative_separation",
+    "score_weakness_taxonomy", "score_fail_closed",
+    # dynamics
+    "ContinuumState", "step_continuum", "continuum_energy", "run_continuum",
+    "FractalState", "FractalEngine",
+    # spectral_gap — imported lazily (requires numpy)
+    # "run_pipeline", "ulam_matrix", "canonical_gap", "loglog_regression"
 ]

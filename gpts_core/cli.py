@@ -1,16 +1,20 @@
 """Unified CLI for gpts_core.
 
 Subcommands:
-  analyze-signal   -- compute structure metrics for a CSV signal column
-  classify-metric  -- classify a metric text row
-  validate-records -- validate a JSONL file of raw output records
-  classify-claim   -- classify a claim string as BLOCKED/BOUNDED/UNKNOWN
-  evidence-score   -- compute evidence score from gate counts
-  replay-ledger    -- replay a JSONL event ledger (hash chain)
-  seal-audit       -- validate a SEAL continuity JSONL ledger
-  promote          -- evaluate promotion candidates from CSV matrices
-  build-manifest   -- build a file manifest for a directory
-  adjudicate       -- score a manual adjudication CSV
+  analyze-signal      -- compute structure metrics for a CSV signal column
+  classify-metric     -- classify a metric text row
+  validate-records    -- validate a JSONL file of raw output records
+  classify-claim      -- classify a claim string as BLOCKED/BOUNDED/UNKNOWN
+  evidence-score      -- compute evidence score from gate counts
+  replay-ledger       -- replay a JSONL event ledger (hash chain)
+  seal-audit          -- validate a SEAL continuity JSONL ledger
+  promote             -- evaluate promotion candidates from CSV matrices
+  build-manifest      -- build a file manifest for a directory
+  adjudicate          -- score a manual adjudication CSV
+  coherence-passport  -- build and validate a coherence passport from module observations JSON
+  audit-claim         -- audit a text claim against a corpus (7-section canonical report)
+  score-report        -- score a canonical audit report markdown against an oracle case JSON
+  spectral-gap        -- compute Ulam spectral gap for Pomeau-Manneville map over alpha grid
 """
 from __future__ import annotations
 
@@ -154,6 +158,67 @@ def cmd_adjudicate(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_coherence_passport(args: argparse.Namespace) -> int:
+    from gpts_core.coherence import (
+        build_coherence_passport, seal_passport_hashes, validate_coherence_passport
+    )
+
+    payload = json.loads(Path(args.file).read_text(encoding="utf-8"))
+    passport = build_coherence_passport(
+        cycle_id=payload.get("cycle_id", "UNKNOWN"),
+        module_observations=payload.get("module_observations", {}),
+        system_version=payload.get("system_version", "LOCAL_CAPTURE"),
+        bins=args.bins,
+    )
+    passport = seal_passport_hashes(passport)
+    report = validate_coherence_passport(passport)
+    _out({"passport": passport, "validation": report}, args.pretty)
+    return 0 if report["replay_status"] == "PASS" else 2
+
+
+def cmd_audit_claim(args: argparse.Namespace) -> int:
+    from gpts_core.audit_claims import audit_claim
+
+    report = audit_claim(
+        claim=args.claim,
+        title=args.title or f"Audit: {args.claim[:60]}",
+        inputs=args.inputs or [],
+    )
+    if args.markdown:
+        print(report.render_markdown())
+    else:
+        _out(report.to_dict(), args.pretty)
+    return 0
+
+
+def cmd_score_report(args: argparse.Namespace) -> int:
+    from gpts_core.score_report import evaluate, score_audit_report
+
+    report_text = Path(args.report).read_text(encoding="utf-8")
+    if args.case:
+        case = json.loads(Path(args.case).read_text(encoding="utf-8"))
+        result = evaluate(case, report_text, strict=args.strict)
+    else:
+        result = score_audit_report(report_text)
+    _out(result, args.pretty)
+    return 0 if result["total"] >= args.min_score else 2
+
+
+def cmd_spectral_gap(args: argparse.Namespace) -> int:
+    from gpts_core.spectral_gap import run_pipeline
+    import numpy as np
+
+    alpha_grid = np.geomspace(args.alpha_min, args.alpha_max, args.n_alpha)
+    result = run_pipeline(
+        alpha_grid,
+        n_bins=args.n_bins,
+        n_traj=args.n_traj,
+        seed=args.seed,
+    )
+    _out(result, args.pretty)
+    return 0 if result.get("regression_fail") is None else 2
+
+
 # ---------------------------------------------------------------------------
 # Parser
 # ---------------------------------------------------------------------------
@@ -224,6 +289,34 @@ def build_parser() -> argparse.ArgumentParser:
     s = sub.add_parser("adjudicate", help="Score a manual adjudication CSV")
     s.add_argument("file", help="Adjudication CSV with label and human_label columns")
 
+    # coherence-passport
+    s = sub.add_parser("coherence-passport", help="Build and validate a coherence passport")
+    s.add_argument("file", help="JSON with cycle_id, module_observations, system_version")
+    s.add_argument("--bins", type=int, default=8, help="Discretization bins (default: 8)")
+
+    # audit-claim
+    s = sub.add_parser("audit-claim", help="Audit a claim against a corpus (7-section report)")
+    s.add_argument("--claim", required=True, help="Claim text to audit")
+    s.add_argument("--title", default="", help="Report title")
+    s.add_argument("--inputs", nargs="*", default=[], help="File or directory paths (corpus)")
+    s.add_argument("--markdown", action="store_true", help="Output rendered markdown instead of JSON")
+
+    # score-report
+    s = sub.add_parser("score-report", help="Score a canonical audit report markdown")
+    s.add_argument("report", help="Markdown report file")
+    s.add_argument("--case", default="", help="Oracle case JSON file (optional)")
+    s.add_argument("--strict", action="store_true", help="Zero score if canonical validation fails")
+    s.add_argument("--min-score", type=int, default=0, help="Exit code 2 if total < min-score")
+
+    # spectral-gap
+    s = sub.add_parser("spectral-gap", help="Compute Ulam spectral gap over alpha grid")
+    s.add_argument("--alpha-min", type=float, default=0.02)
+    s.add_argument("--alpha-max", type=float, default=0.20)
+    s.add_argument("--n-alpha", type=int, default=10)
+    s.add_argument("--n-bins", type=int, default=80)
+    s.add_argument("--n-traj", type=int, default=20000)
+    s.add_argument("--seed", type=int, default=42)
+
     return p
 
 
@@ -241,6 +334,10 @@ def main(argv: list[str] | None = None) -> int:
         "promote": cmd_promote,
         "build-manifest": cmd_build_manifest,
         "adjudicate": cmd_adjudicate,
+        "coherence-passport": cmd_coherence_passport,
+        "audit-claim": cmd_audit_claim,
+        "score-report": cmd_score_report,
+        "spectral-gap": cmd_spectral_gap,
     }
     handler = dispatch.get(args.cmd)
     if handler is None:
