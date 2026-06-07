@@ -1,0 +1,108 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MODULE_013_SPECTRAL_GAP",
+  "description": "Schema for spectral gap pipeline input and output",
+  "definitions": {
+    "gap_point": {
+      "type": ["number", "null"],
+      "description": "Spectral gap value for one alpha point, or null if computation failed"
+    },
+    "regression_result": {
+      "type": "object",
+      "properties": {
+        "n_valid": {"type": "integer"},
+        "n_total": {"type": "integer"},
+        "FAIL": {"type": ["string", "null"]},
+        "kappa_fit": {"type": ["number", "null"]},
+        "c_fit": {"type": "number"},
+        "R2": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "RMS_resid": {"type": "number", "minimum": 0.0},
+        "stderr_kappa": {"type": "number", "minimum": 0.0},
+        "CI95_kappa": {
+          "type": "array",
+          "items": {"type": "number"},
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "D": {"type": "number", "minimum": 0.0},
+        "kappa_theory": {"type": "number"},
+        "qualificatif": {
+          "type": "string",
+          "enum": ["PUBLICATION_GRADE", "GOOD_SCALING", "PRE_ASYMPTOTIC"]
+        }
+      }
+    }
+  },
+  "properties": {
+    "pipeline_input": {
+      "type": "object",
+      "required": ["alpha_grid"],
+      "properties": {
+        "alpha_grid": {
+          "type": "array",
+          "items": {"type": "number", "exclusiveMinimum": 0.0},
+          "minItems": 1,
+          "description": "Sequence of alpha values to sweep"
+        },
+        "n_bins": {
+          "type": "integer",
+          "minimum": 4,
+          "default": 80,
+          "description": "Number of Ulam bins"
+        },
+        "n_traj": {
+          "type": "integer",
+          "minimum": 100,
+          "default": 80000,
+          "description": "Number of trajectory points"
+        },
+        "seed": {
+          "type": "integer",
+          "default": 42
+        },
+        "beta": {
+          "type": "number",
+          "default": 0.75,
+          "description": "PM map exponent"
+        },
+        "min_gap": {
+          "type": "number",
+          "default": 5e-5,
+          "description": "Minimum gap for regression inclusion"
+        }
+      }
+    },
+    "pipeline_output": {
+      "type": "object",
+      "required": ["alphas", "gaps", "regression", "claim_ceiling"],
+      "properties": {
+        "beta": {"type": "number"},
+        "kappa_theory": {"type": "number"},
+        "n_bins": {"type": "integer"},
+        "n_traj": {"type": "integer"},
+        "seed": {"type": "integer"},
+        "alphas": {
+          "type": "array",
+          "items": {"type": "number"}
+        },
+        "gaps": {
+          "type": "array",
+          "items": {"type": ["number", "null"]}
+        },
+        "row_stochastic_error_max": {"type": "number"},
+        "lambda1_error_max": {"type": "number"},
+        "any_fail_point": {"type": "boolean"},
+        "regression": {"$ref": "#/definitions/regression_result"},
+        "kappa_fit": {"type": ["number", "null"]},
+        "R2": {"type": ["number", "null"]},
+        "D": {"type": ["number", "null"]},
+        "qualificatif": {"type": ["string", "null"]},
+        "regression_fail": {"type": ["string", "null"]},
+        "claim_ceiling": {
+          "type": "string",
+          "enum": ["LOCAL_LAB_ONLY_NOT_EXTERNAL_PROOF"]
+        }
+      }
+    }
+  }
+}

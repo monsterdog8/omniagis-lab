@@ -1,0 +1,108 @@
+{
+  "module_id": "MODULE_014_DYNAMICS",
+  "version": "1.0.0",
+  "source_file": "gpts_core/dynamics.py",
+  "description": "Coupled state-variable dynamics and fractal coherence tracking. Two independent models: ContinuumState/step_continuum for 6-variable nonlinear discrete-time dynamics, and FractalEngine/FractalState for cycle-based coherence tracking with SHA-256 determinism.",
+  "function": "Nonlinear continuum state dynamics (ContinuumState + step_continuum), fractal coherence tracking (FractalState + FractalEngine)",
+  "inputs": [
+    {"name": "state", "type": "ContinuumState", "description": "6-variable coupled state for coherence/fusion/entropy/chaos/resonance/energy"},
+    {"name": "noise_std", "type": "float", "description": "Gaussian noise standard deviation for step_continuum (default 0.002)"},
+    {"name": "rng", "type": "Optional[random.Random]", "description": "RNG instance for reproducible steps in step_continuum"},
+    {"name": "n_steps", "type": "int", "description": "Number of discrete time steps for run_continuum"},
+    {"name": "initial", "type": "Optional[ContinuumState]", "description": "Initial state for run_continuum (default: ContinuumState())"},
+    {"name": "seed", "type": "Optional[int]", "description": "RNG seed for run_continuum"},
+    {"name": "history_size", "type": "int", "description": "Deque size for FractalEngine coherence history (default 100)"},
+    {"name": "cycle_id", "type": "Optional[int]", "description": "Explicit cycle index for FractalEngine.compute_metrics"}
+  ],
+  "outputs": [
+    {"name": "ContinuumState", "type": "dataclass", "description": "6-variable state: psi, F, S, C, R, Q with to_dict()"},
+    {"name": "energy", "type": "float", "description": "Derived energy Q = (F * psi) / (1 + S) * R"},
+    {"name": "step_continuum", "type": "ContinuumState", "description": "Next state after one discrete time step"},
+    {"name": "run_continuum", "type": "List[Dict]", "description": "History of n_steps+1 state dicts"},
+    {"name": "FractalState", "type": "dataclass", "description": "coherence, entropy, resonance_hz, drift with to_dict()"},
+    {"name": "FractalEngine.compute_metrics", "type": "FractalState", "description": "FractalState for current cycle"},
+    {"name": "FractalEngine.get_statistics", "type": "Dict[str, float]", "description": "mean, std, min, max of coherence history"}
+  ],
+  "dependencies": {
+    "stdlib": ["math", "hashlib", "random", "time", "collections", "dataclasses", "typing"],
+    "third_party": []
+  },
+  "public_api": [
+    {
+      "name": "ContinuumState",
+      "signature": "ContinuumState(psi=0.999, F=0.90, S=0.0001, C=0.15, R=55.435, Q=0.0)",
+      "returns": "ContinuumState",
+      "description": "6-variable coupled state dataclass. Fields: psi (coherence), F (fusion), S (entropy), C (chaos), R (resonance Hz), Q (energy). Method: to_dict() -> Dict[str, float]"
+    },
+    {
+      "name": "energy",
+      "signature": "energy(state: ContinuumState) -> float",
+      "returns": "float",
+      "description": "Compute derived energy Q = (F * psi) / (1 + S) * R"
+    },
+    {
+      "name": "step_continuum",
+      "signature": "step_continuum(state: ContinuumState, *, noise_std=0.002, rng=None) -> ContinuumState",
+      "returns": "ContinuumState",
+      "description": "Advance the continuum state by one discrete time step with Gaussian noise. All variables clamped to [0,1] except R and Q."
+    },
+    {
+      "name": "run_continuum",
+      "signature": "run_continuum(n_steps: int, initial=None, *, noise_std=0.002, seed=None) -> List[Dict]",
+      "returns": "List[Dict[str, float]]",
+      "description": "Run the continuum dynamics for n_steps. Returns list of n_steps+1 state dicts (initial state included)."
+    },
+    {
+      "name": "FractalState",
+      "signature": "FractalState(coherence=1.0, entropy=0.0, resonance_hz=11.987, drift=0.0)",
+      "returns": "FractalState",
+      "description": "Fractal coherence state dataclass. Fields: coherence, entropy, resonance_hz, drift. Method: to_dict() -> Dict[str, float]"
+    },
+    {
+      "name": "FractalEngine",
+      "signature": "FractalEngine(history_size=100)",
+      "returns": "FractalEngine",
+      "description": "Cycle-based fractal coherence tracker. Uses SHA-256 determinism plus time-based sine modulation. Pure stdlib, no external dependencies."
+    },
+    {
+      "name": "FractalEngine.compute_metrics",
+      "signature": "FractalEngine.compute_metrics(cycle_id=None) -> FractalState",
+      "returns": "FractalState",
+      "description": "Compute fractal metrics for the next cycle step. Advances cycle_count."
+    },
+    {
+      "name": "FractalEngine.get_state",
+      "signature": "FractalEngine.get_state() -> FractalState",
+      "returns": "FractalState",
+      "description": "Return the most recently computed FractalState."
+    },
+    {
+      "name": "FractalEngine.get_history",
+      "signature": "FractalEngine.get_history() -> List[float]",
+      "returns": "List[float]",
+      "description": "Return the full coherence history as a list."
+    },
+    {
+      "name": "FractalEngine.get_statistics",
+      "signature": "FractalEngine.get_statistics() -> Dict[str, float]",
+      "returns": "Dict[str, float]",
+      "description": "Return mean, std, min, max of the coherence history."
+    },
+    {
+      "name": "FractalEngine.is_stable",
+      "signature": "FractalEngine.is_stable(drift_threshold=0.0001, coherence_threshold=0.999) -> bool",
+      "returns": "bool",
+      "description": "Return True if drift < drift_threshold and coherence > coherence_threshold."
+    },
+    {
+      "name": "FractalEngine.reset",
+      "signature": "FractalEngine.reset() -> None",
+      "returns": "None",
+      "description": "Reset coherence history, state, and cycle_count to initial values."
+    }
+  ],
+  "status": "ACTIVE",
+  "coverage": "82%",
+  "tests": "tests/test_MODULE_014.py",
+  "claim_ceiling": "LOCAL_ONLY__NO_EXTERNAL_PROOF"
+}

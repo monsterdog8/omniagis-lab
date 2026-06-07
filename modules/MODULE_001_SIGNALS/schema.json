@@ -1,0 +1,189 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MODULE_001_SIGNALS API Schema",
+  "description": "Input/output contracts for the signals module public API",
+  "definitions": {
+    "float_array": {
+      "type": "array",
+      "items": {"type": "number"},
+      "minItems": 1
+    },
+    "analyze_output": {
+      "type": "object",
+      "required": [
+        "entropy_norm", "compression_ratio", "autocorr_lag1", "autocorr_max",
+        "spectral_peak_hz", "spectral_concentration", "spectral_entropy",
+        "motif_top_share", "peak_freq_cv", "entropy_cv", "segment_jsd_mean",
+        "ar2_a1", "ar2_a2", "ar2_r2", "estimated_freq_hz", "root_radius",
+        "structure_score"
+      ],
+      "properties": {
+        "entropy_norm": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "compression_ratio": {"type": "number", "minimum": 0.0},
+        "autocorr_lag1": {"type": "number"},
+        "autocorr_max": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "spectral_peak_hz": {"type": "number", "minimum": 0.0},
+        "spectral_concentration": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "spectral_entropy": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "motif_top_share": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "peak_freq_cv": {"type": "number"},
+        "entropy_cv": {"type": "number"},
+        "segment_jsd_mean": {"type": "number"},
+        "ar2_a1": {"type": "number"},
+        "ar2_a2": {"type": "number"},
+        "ar2_r2": {"type": "number"},
+        "estimated_freq_hz": {"type": "number"},
+        "root_radius": {"type": "number"},
+        "structure_score": {"type": "number", "minimum": 0.0, "maximum": 1.0}
+      }
+    },
+    "bootstrap_ci_output": {
+      "type": "object",
+      "required": ["mean", "ci_low", "ci_high", "n"],
+      "properties": {
+        "mean": {"type": "number"},
+        "ci_low": {"type": "number"},
+        "ci_high": {"type": "number"},
+        "n": {"type": "integer", "minimum": 0}
+      }
+    },
+    "step_metrics_output": {
+      "type": "object",
+      "properties": {
+        "initial_slope": {"type": "number"},
+        "rise_time": {"type": "number"},
+        "overshoot": {"type": "number"},
+        "settling_time": {"type": "number"},
+        "steady_state": {"type": "number"}
+      }
+    }
+  },
+  "functions": {
+    "entropy_norm": {
+      "input": {
+        "x": {"$ref": "#/definitions/float_array"},
+        "bins": {"type": "integer", "minimum": 2, "default": 32}
+      },
+      "output": {"type": "number", "minimum": 0.0, "maximum": 1.0}
+    },
+    "compression_ratio": {
+      "input": {
+        "x": {"$ref": "#/definitions/float_array"}
+      },
+      "output": {"type": "number", "minimum": 0.0, "maximum": 1.0}
+    },
+    "autocorr": {
+      "input": {
+        "x": {"$ref": "#/definitions/float_array"},
+        "maxlag": {"type": "integer", "minimum": 1, "default": 64}
+      },
+      "output": {
+        "type": "array",
+        "items": {"type": "number"},
+        "minItems": 2,
+        "maxItems": 2,
+        "description": "[lag1_autocorr, max_abs_autocorr]"
+      }
+    },
+    "spectral_analysis": {
+      "input": {
+        "x": {"$ref": "#/definitions/float_array"},
+        "sr": {"type": "number", "exclusiveMinimum": 0}
+      },
+      "output": {
+        "type": "array",
+        "items": {"type": "number"},
+        "minItems": 3,
+        "maxItems": 3,
+        "description": "[peak_freq_hz, spectral_concentration, spectral_entropy]"
+      }
+    },
+    "motif_share": {
+      "input": {
+        "x": {"$ref": "#/definitions/float_array"},
+        "alphabet": {"type": "integer", "minimum": 2, "default": 8},
+        "mlen": {"type": "integer", "minimum": 2, "default": 4}
+      },
+      "output": {"type": "number", "minimum": 0.0, "maximum": 1.0}
+    },
+    "window_stats": {
+      "input": {
+        "x": {"$ref": "#/definitions/float_array"},
+        "sr": {"type": "number", "exclusiveMinimum": 0},
+        "window": {"type": "integer", "minimum": 4, "default": 512}
+      },
+      "output": {
+        "type": "array",
+        "items": {"type": "number"},
+        "minItems": 3,
+        "maxItems": 3,
+        "description": "[peak_freq_cv, entropy_cv, segment_jsd_mean]"
+      }
+    },
+    "ar2_fit": {
+      "input": {
+        "x": {"$ref": "#/definitions/float_array"},
+        "sr": {"type": "number", "exclusiveMinimum": 0}
+      },
+      "output": {
+        "type": "array",
+        "items": {"type": "number"},
+        "minItems": 5,
+        "maxItems": 5,
+        "description": "[a1, a2, r2, estimated_freq_hz, root_radius]"
+      }
+    },
+    "structure_score": {
+      "input": {
+        "row": {
+          "type": "object",
+          "required": ["autocorr_max", "spectral_concentration", "ar2_r2", "motif_top_share", "compression_ratio", "peak_freq_cv", "segment_jsd_mean"],
+          "properties": {
+            "autocorr_max": {"type": "number"},
+            "spectral_concentration": {"type": "number"},
+            "ar2_r2": {"type": "number"},
+            "motif_top_share": {"type": "number"},
+            "compression_ratio": {"type": "number"},
+            "peak_freq_cv": {"type": "number"},
+            "segment_jsd_mean": {"type": "number"}
+          }
+        }
+      },
+      "output": {"type": "number", "minimum": 0.0, "maximum": 1.0}
+    },
+    "analyze": {
+      "input": {
+        "x": {"$ref": "#/definitions/float_array"},
+        "sr": {"type": "number", "exclusiveMinimum": 0, "default": 256.0}
+      },
+      "output": {"$ref": "#/definitions/analyze_output"}
+    },
+    "step_metrics": {
+      "input": {
+        "t": {"$ref": "#/definitions/float_array"},
+        "y": {"$ref": "#/definitions/float_array"},
+        "eps": {"type": "number", "exclusiveMinimum": 0, "default": 0.02}
+      },
+      "output": {"$ref": "#/definitions/step_metrics_output"}
+    },
+    "generate_null": {
+      "input": {
+        "x": {"$ref": "#/definitions/float_array"},
+        "seed": {"type": "integer"},
+        "kind": {
+          "type": "string",
+          "enum": ["shuffle", "gaussian", "same_marginal", "phase_scramble"]
+        }
+      },
+      "output": {"$ref": "#/definitions/float_array"}
+    },
+    "bootstrap_ci": {
+      "input": {
+        "values": {"$ref": "#/definitions/float_array"},
+        "seed": {"type": "integer"},
+        "n_boot": {"type": "integer", "minimum": 1, "default": 200}
+      },
+      "output": {"$ref": "#/definitions/bootstrap_ci_output"}
+    }
+  }
+}

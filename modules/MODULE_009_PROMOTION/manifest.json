@@ -1,0 +1,62 @@
+{
+  "module_id": "MODULE_009_PROMOTION",
+  "version": "1.0.0",
+  "source_file": "gpts_core/promotion.py",
+  "description": "Promotion gate engine and artifact continuity audit. Reads EXOCHRONOS-style CSV matrices and evaluates rows for promotion readiness using a strict set of required signal fields. Also validates artifact SHA-256 integrity from JSONL seal ledgers and replays JSONL event ledgers with hash-chain verification.",
+  "function": "Promotion evaluation, SEAL continuity validation, JSONL ledger replay",
+  "inputs": [
+    {"name": "path", "type": "Path", "description": "Path to promotion matrix CSV for read_matrix_csv"},
+    {"name": "paths", "type": "Iterable[Path]", "description": "One or more CSV matrix file paths for evaluate_promotion"},
+    {"name": "row", "type": "Dict[str, Any]", "description": "SEAL ledger record dict for validate_seal_record"},
+    {"name": "root", "type": "Path", "description": "Filesystem root for resolving artifact paths in seal validation"},
+    {"name": "ledger_path", "type": "Path", "description": "Path to JSONL seal ledger for validate_seal_ledger"},
+    {"name": "path_jsonl", "type": "Path", "description": "Path to JSONL event ledger for replay_jsonl_ledger"}
+  ],
+  "outputs": [
+    {"name": "read_matrix_csv", "type": "List[Dict[str, str]]", "description": "List of row dicts from promotion matrix CSV"},
+    {"name": "evaluate_promotion", "type": "Dict[str, Any]", "description": "Promotion verdict dict with candidates, blockers, and reason counts"},
+    {"name": "validate_seal_record", "type": "Dict[str, Any]", "description": "Seal record validation result with valid flag and errors list"},
+    {"name": "validate_seal_ledger", "type": "Dict[str, Any]", "description": "Full ledger validation report with pass/fail counts"},
+    {"name": "replay_jsonl_ledger", "type": "Dict[str, Any]", "description": "Ledger replay result with status PASS or FAIL and event count"}
+  ],
+  "dependencies": {
+    "stdlib": ["csv", "json", "pathlib", "hashlib"],
+    "third_party": []
+  },
+  "public_api": [
+    {
+      "name": "read_matrix_csv",
+      "signature": "read_matrix_csv(path: Path) -> List[Dict[str, str]]",
+      "returns": "List[Dict[str, str]]",
+      "description": "Read a promotion matrix CSV into a list of row dicts."
+    },
+    {
+      "name": "evaluate_promotion",
+      "signature": "evaluate_promotion(paths: Iterable[Path]) -> Dict[str, Any]",
+      "returns": "Dict[str, Any]",
+      "description": "Evaluate promotion candidates across one or more CSV matrix files. Returns verdict dict with candidates, blockers, and reason counts."
+    },
+    {
+      "name": "validate_seal_record",
+      "signature": "validate_seal_record(row: Dict, root: Path) -> Dict[str, Any]",
+      "returns": "Dict[str, Any]",
+      "description": "Validate one SEAL continuity ledger record against the filesystem."
+    },
+    {
+      "name": "validate_seal_ledger",
+      "signature": "validate_seal_ledger(ledger_path: Path, root: Path) -> Dict[str, Any]",
+      "returns": "Dict[str, Any]",
+      "description": "Validate an entire SEAL continuity JSONL ledger by re-checking SHA-256 and file size against the filesystem."
+    },
+    {
+      "name": "replay_jsonl_ledger",
+      "signature": "replay_jsonl_ledger(path: Path) -> Dict[str, Any]",
+      "returns": "Dict[str, Any]",
+      "description": "Replay a JSONL event ledger, verifying hash-parent chain and monotonic event_id. Returns status PASS or FAIL with reason."
+    }
+  ],
+  "status": "PRODUCTION_CANDIDATE",
+  "coverage": "65%",
+  "tests": "tests/test_MODULE_009.py",
+  "claim_ceiling": "LOCAL_ONLY__NO_EXTERNAL_PROOF"
+}

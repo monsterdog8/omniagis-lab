@@ -1,0 +1,134 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "MODULE_007_MANIFEST_schema",
+  "title": "MODULE_007_MANIFEST Schema",
+  "description": "Input/output schema for MODULE_007_MANIFEST (gpts_core/manifest.py)",
+  "definitions": {
+    "ManifestEntry": {
+      "type": "object",
+      "required": ["relpath", "name", "kind", "ext", "size_bytes", "sha256"],
+      "properties": {
+        "relpath": {"type": "string", "description": "Relative path from manifest root"},
+        "name": {"type": "string", "description": "Filename"},
+        "kind": {
+          "type": "string",
+          "enum": ["python", "csv", "json", "jsonl", "markdown", "text", "pdf", "html",
+                   "image", "archive", "config", "javascript", "typescript", "shell", "unknown"],
+          "description": "File type category"
+        },
+        "ext": {"type": "string", "description": "Lowercase file extension including dot"},
+        "size_bytes": {"type": "integer", "minimum": 0, "description": "File size in bytes"},
+        "sha256": {
+          "oneOf": [
+            {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+            {"type": "null"}
+          ],
+          "description": "SHA-256 digest prefixed with 'sha256:' or null"
+        }
+      }
+    },
+    "WriteManifestResult": {
+      "type": "object",
+      "required": ["generated_utc", "root", "file_count", "aggregate_hash", "production_status", "files"],
+      "properties": {
+        "generated_utc": {"type": "string", "description": "ISO-8601 UTC timestamp"},
+        "root": {"type": "string", "description": "Absolute root path"},
+        "file_count": {"type": "integer", "minimum": 0},
+        "aggregate_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+        "production_status": {"type": "string", "enum": ["LOCKED"]},
+        "files": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/ManifestEntry"}
+        }
+      }
+    }
+  },
+  "type": "object",
+  "properties": {
+    "sha256_file_input": {
+      "type": "object",
+      "required": ["path"],
+      "properties": {
+        "path": {"type": "string", "description": "Absolute or relative filesystem path"}
+      }
+    },
+    "sha256_file_output": {
+      "oneOf": [
+        {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+        {"type": "null"}
+      ]
+    },
+    "sha256_bytes_input": {
+      "type": "object",
+      "required": ["data"],
+      "properties": {
+        "data": {"type": "string", "contentEncoding": "base64", "description": "Raw bytes (base64-encoded for JSON transport)"}
+      }
+    },
+    "sha256_bytes_output": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "kind_for_input": {
+      "type": "object",
+      "required": ["path"],
+      "properties": {
+        "path": {"type": "string", "description": "File path (extension is used for classification)"}
+      }
+    },
+    "kind_for_output": {
+      "type": "string",
+      "description": "File type category string"
+    },
+    "build_manifest_input": {
+      "type": "object",
+      "required": ["root"],
+      "properties": {
+        "root": {"type": "string", "description": "Root directory path to scan"}
+      }
+    },
+    "build_manifest_output": {
+      "type": "array",
+      "items": {"$ref": "#/definitions/ManifestEntry"}
+    },
+    "aggregate_hash_input": {
+      "type": "object",
+      "required": ["entries"],
+      "properties": {
+        "entries": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/ManifestEntry"}
+        }
+      }
+    },
+    "aggregate_hash_output": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "write_manifest_input": {
+      "type": "object",
+      "required": ["root", "out_dir"],
+      "properties": {
+        "root": {"type": "string"},
+        "out_dir": {"type": "string"},
+        "label": {"type": "string", "default": "manifest"}
+      }
+    },
+    "write_manifest_output": {
+      "$ref": "#/definitions/WriteManifestResult"
+    },
+    "safe_extract_zip_input": {
+      "type": "object",
+      "required": ["zip_path", "dest"],
+      "properties": {
+        "zip_path": {"type": "string", "description": "Path to ZIP archive"},
+        "dest": {"type": "string", "description": "Extraction destination directory"}
+      }
+    },
+    "safe_extract_zip_output": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "List of absolute paths to extracted files (path-traversal entries are skipped)"
+    }
+  }
+}

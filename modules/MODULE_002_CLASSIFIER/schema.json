@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MODULE_002_CLASSIFIER API Schema",
+  "description": "Input/output contracts for the classifier module public API",
+  "definitions": {
+    "label_enum": {
+      "type": "string",
+      "enum": ["observed", "computed", "reported", "simulated", "symbolic", "unsupported"]
+    },
+    "classify_metric_output": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "description": "[label, reasons, confidence]",
+      "items": [
+        {"$ref": "#/definitions/label_enum"},
+        {"type": "array", "items": {"type": "string"}},
+        {"type": "number", "minimum": 0.0, "maximum": 1.0}
+      ]
+    }
+  },
+  "constants": {
+    "LABELS": {
+      "type": "array",
+      "items": {"$ref": "#/definitions/label_enum"},
+      "minItems": 6,
+      "maxItems": 6,
+      "description": "Ordered list of valid classification labels"
+    }
+  },
+  "functions": {
+    "classify_metric": {
+      "input": {
+        "metric_name": {
+          "type": "string",
+          "description": "Name of the metric being classified"
+        },
+        "value_raw": {
+          "type": "string",
+          "description": "Raw string value of the metric"
+        },
+        "context": {
+          "type": "string",
+          "default": "",
+          "description": "Surrounding text context"
+        },
+        "path": {
+          "type": "string",
+          "default": "",
+          "description": "Source file path for the metric row"
+        },
+        "row_type": {
+          "type": "string",
+          "enum": ["metric", "equation", "recalculation"],
+          "default": "metric",
+          "description": "Row type hint"
+        },
+        "recalculable": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Whether the row is recalculable: 'True' or null"
+        },
+        "result": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Numeric result string if row_type is equation/recalculation"
+        }
+      },
+      "output": {"$ref": "#/definitions/classify_metric_output"}
+    }
+  }
+}

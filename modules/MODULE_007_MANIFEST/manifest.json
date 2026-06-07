@@ -1,0 +1,78 @@
+{
+  "module_id": "MODULE_007_MANIFEST",
+  "version": "1.0.0",
+  "source_file": "gpts_core/manifest.py",
+  "description": "File inventory, hashing, and manifest building. Builds a structured manifest of a directory tree with SHA-256 hashes and file type classification. Provides safe ZIP extraction with path-traversal protection.",
+  "function": "File hashing, manifest building, ZIP safe extraction",
+  "inputs": [
+    {"name": "path", "type": "Path", "description": "File path for sha256_file or kind_for"},
+    {"name": "data", "type": "bytes", "description": "Raw bytes for sha256_bytes"},
+    {"name": "root", "type": "Path", "description": "Root directory for build_manifest or write_manifest"},
+    {"name": "entries", "type": "List[Dict[str, Any]]", "description": "Manifest entry list for aggregate_hash"},
+    {"name": "out_dir", "type": "Path", "description": "Output directory for write_manifest"},
+    {"name": "label", "type": "str", "description": "Filename label for write_manifest (default: 'manifest')"},
+    {"name": "zip_path", "type": "Path", "description": "ZIP archive path for safe_extract_zip"},
+    {"name": "dest", "type": "Path", "description": "Extraction destination for safe_extract_zip"}
+  ],
+  "outputs": [
+    {"name": "sha256_file", "type": "Optional[str]", "description": "SHA-256 digest prefixed with 'sha256:' or None if file missing"},
+    {"name": "sha256_bytes", "type": "str", "description": "SHA-256 digest of bytes, prefixed with 'sha256:'"},
+    {"name": "kind_for", "type": "str", "description": "File type string (python/csv/archive/json/etc.) or 'unknown'"},
+    {"name": "build_manifest", "type": "List[Dict[str, Any]]", "description": "List of file entry dicts with relpath, name, kind, ext, size_bytes, sha256"},
+    {"name": "aggregate_hash", "type": "str", "description": "Deterministic aggregate SHA-256 over all manifest entries"},
+    {"name": "write_manifest", "type": "Dict[str, Any]", "description": "Manifest dict written to JSON and CSV in out_dir"},
+    {"name": "safe_extract_zip", "type": "List[str]", "description": "List of extracted file paths (traversal-blocked)"}
+  ],
+  "dependencies": {
+    "stdlib": ["hashlib", "zipfile", "json", "csv", "pathlib", "datetime"],
+    "third_party": []
+  },
+  "public_api": [
+    {
+      "name": "sha256_file",
+      "signature": "sha256_file(path: Path) -> Optional[str]",
+      "returns": "Optional[str]",
+      "description": "Compute SHA-256 of a file. Returns None if file does not exist."
+    },
+    {
+      "name": "sha256_bytes",
+      "signature": "sha256_bytes(data: bytes) -> str",
+      "returns": "str",
+      "description": "Compute SHA-256 of raw bytes, returning 'sha256:<hex>' string."
+    },
+    {
+      "name": "kind_for",
+      "signature": "kind_for(path: Path) -> str",
+      "returns": "str",
+      "description": "Classify a file by extension. Returns type string or 'unknown'."
+    },
+    {
+      "name": "build_manifest",
+      "signature": "build_manifest(root: Path) -> List[Dict[str, Any]]",
+      "returns": "List[Dict[str, Any]]",
+      "description": "Recursively build a manifest of all files under root with SHA-256 hashes."
+    },
+    {
+      "name": "aggregate_hash",
+      "signature": "aggregate_hash(entries: List[Dict[str, Any]]) -> str",
+      "returns": "str",
+      "description": "Compute a deterministic aggregate SHA-256 over a manifest entry list."
+    },
+    {
+      "name": "write_manifest",
+      "signature": "write_manifest(root: Path, out_dir: Path, label: str = 'manifest') -> Dict[str, Any]",
+      "returns": "Dict[str, Any]",
+      "description": "Build and write manifest as both JSON and CSV files to out_dir."
+    },
+    {
+      "name": "safe_extract_zip",
+      "signature": "safe_extract_zip(zip_path: Path, dest: Path) -> List[str]",
+      "returns": "List[str]",
+      "description": "Extract ZIP to dest with path-traversal protection. Returns list of extracted paths."
+    }
+  ],
+  "status": "PRODUCTION_CANDIDATE",
+  "coverage": "90%",
+  "tests": "tests/test_MODULE_007.py",
+  "claim_ceiling": "LOCAL_ONLY__NO_EXTERNAL_PROOF"
+}

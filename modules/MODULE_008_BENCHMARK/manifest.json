@@ -1,0 +1,96 @@
+{
+  "module_id": "MODULE_008_BENCHMARK",
+  "version": "1.0.0",
+  "source_file": "gpts_core/benchmark.py",
+  "description": "Benchmark utilities: stdlib-only linear baseline model and MSE scoring. Includes linear regression via gradient descent (no external deps), weighted stability scoring with missing/invalid penalties, and pre-registered prediction lock comparison for shadow observation gates.",
+  "function": "Linear regression (stdlib gradient descent), MSE stability scoring, prediction lock comparison",
+  "inputs": [
+    {"name": "matrix", "type": "List[List[float]]", "description": "Feature matrix for minmax_fit or minmax_transform"},
+    {"name": "mins", "type": "List[float]", "description": "Per-column minimums for minmax_transform"},
+    {"name": "maxs", "type": "List[float]", "description": "Per-column maximums for minmax_transform"},
+    {"name": "X", "type": "List[List[float]]", "description": "Feature matrix for train_linear or predict_linear"},
+    {"name": "y", "type": "List[float]", "description": "Target labels for train_linear"},
+    {"name": "epochs", "type": "int", "description": "Number of gradient descent epochs (default: 5000)"},
+    {"name": "lr", "type": "float", "description": "Learning rate (default: 0.05)"},
+    {"name": "weights", "type": "List[float]", "description": "Trained weights for predict_linear"},
+    {"name": "bias", "type": "float", "description": "Trained bias for predict_linear"},
+    {"name": "clip", "type": "bool", "description": "Whether to clip predictions to [0,1] (default: True)"},
+    {"name": "path", "type": "Path", "description": "CSV file path for read_feature_csv or read_score_csv"},
+    {"name": "feature_cols", "type": "List[str]", "description": "Column names for read_feature_csv"},
+    {"name": "predictions", "type": "Dict[str, float]", "description": "Predicted values for mse_score"},
+    {"name": "truth", "type": "Dict[str, float]", "description": "Ground truth values for mse_score"},
+    {"name": "missing_penalty", "type": "float", "description": "Penalty per missing prediction (default: 0.10)"},
+    {"name": "invalid_penalty", "type": "float", "description": "Penalty per non-finite prediction (default: 0.20)"},
+    {"name": "range_penalty", "type": "float", "description": "Penalty per out-of-[0,1] prediction (default: 0.05)"},
+    {"name": "prediction_lock", "type": "Dict", "description": "Pre-registered prediction lock dict for compare_prediction_lock"},
+    {"name": "observation", "type": "Dict", "description": "Shadow observation dict for compare_prediction_lock"}
+  ],
+  "outputs": [
+    {"name": "minmax_fit", "type": "Tuple[List[float], List[float]]", "description": "Per-column min and max lists"},
+    {"name": "minmax_transform", "type": "List[List[float]]", "description": "Scaled feature matrix in [0,1]"},
+    {"name": "train_linear", "type": "Tuple[List[float], float]", "description": "Trained (weights, bias) pair"},
+    {"name": "predict_linear", "type": "List[float]", "description": "Predictions, optionally clipped to [0,1]"},
+    {"name": "read_feature_csv", "type": "List[List[float]]", "description": "Feature matrix from CSV"},
+    {"name": "mse_score", "type": "float", "description": "Stability score in [0,1] (1 - MSE - penalties)"},
+    {"name": "read_score_csv", "type": "Dict[str, float]", "description": "Map of sample_id to stability_score"},
+    {"name": "compare_prediction_lock", "type": "Dict[str, Any]", "description": "Structured verdict dict with interval result and hash"}
+  ],
+  "dependencies": {
+    "stdlib": ["csv", "pathlib", "math", "hashlib", "json", "datetime"],
+    "third_party": []
+  },
+  "public_api": [
+    {
+      "name": "minmax_fit",
+      "signature": "minmax_fit(matrix: List[List[float]]) -> Tuple[List[float], List[float]]",
+      "returns": "Tuple[List[float], List[float]]",
+      "description": "Fit min-max scaler from a feature matrix. Returns (mins, maxs) per column."
+    },
+    {
+      "name": "minmax_transform",
+      "signature": "minmax_transform(matrix: List[List[float]], mins: List[float], maxs: List[float]) -> List[List[float]]",
+      "returns": "List[List[float]]",
+      "description": "Apply min-max scaling using fitted mins and maxs."
+    },
+    {
+      "name": "train_linear",
+      "signature": "train_linear(X: List[List[float]], y: List[float], epochs: int = 5000, lr: float = 0.05) -> Tuple[List[float], float]",
+      "returns": "Tuple[List[float], float]",
+      "description": "Train a linear regression model via gradient descent. Returns (weights, bias)."
+    },
+    {
+      "name": "predict_linear",
+      "signature": "predict_linear(X: List[List[float]], weights: List[float], bias: float, clip: bool = True) -> List[float]",
+      "returns": "List[float]",
+      "description": "Predict with a linear model, optionally clipped to [0, 1]."
+    },
+    {
+      "name": "read_feature_csv",
+      "signature": "read_feature_csv(path: Path, feature_cols: List[str]) -> List[List[float]]",
+      "returns": "List[List[float]]",
+      "description": "Read feature matrix from a CSV file using specified column names."
+    },
+    {
+      "name": "mse_score",
+      "signature": "mse_score(predictions: Dict[str, float], truth: Dict[str, float], missing_penalty: float = 0.10, invalid_penalty: float = 0.20, range_penalty: float = 0.05) -> float",
+      "returns": "float",
+      "description": "Weighted stability score: 1 - MSE, minus per-sample penalties. Returns score in [0, 1]."
+    },
+    {
+      "name": "read_score_csv",
+      "signature": "read_score_csv(path: Path) -> Dict[str, float]",
+      "returns": "Dict[str, float]",
+      "description": "Read sample_id to stability_score mapping from a CSV file."
+    },
+    {
+      "name": "compare_prediction_lock",
+      "signature": "compare_prediction_lock(prediction_lock: Dict, observation: Dict) -> Dict",
+      "returns": "Dict[str, Any]",
+      "description": "Compare a shadow observation against a pre-registered numeric prediction lock. Returns structured verdict dict. Production is never unlocked automatically."
+    }
+  ],
+  "status": "PRODUCTION_CANDIDATE",
+  "coverage": "70%",
+  "tests": "tests/test_MODULE_008.py",
+  "claim_ceiling": "LOCAL_ONLY__NO_EXTERNAL_PROOF"
+}

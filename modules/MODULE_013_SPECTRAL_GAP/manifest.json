@@ -1,0 +1,103 @@
+{
+  "module_id": "MODULE_013_SPECTRAL_GAP",
+  "version": "1.0.0",
+  "source_file": "gpts_core/spectral_gap.py",
+  "description": "Ulam spectral gap analysis for Pomeau-Manneville intermittency maps",
+  "function": "Pomeau-Manneville type-I map, Ulam transition matrix, spectral gap computation, log-log regression for kappa scaling exponent",
+  "inputs": [
+    "alpha_grid: sequence of float alpha values",
+    "n_bins: int (Ulam bin count, default 80)",
+    "n_traj: int (trajectory count, default 80000)",
+    "seed: int (RNG seed, default 42)",
+    "beta: float (PM map exponent, default 0.75)",
+    "min_gap: float (minimum gap threshold, default 5e-5)"
+  ],
+  "outputs": [
+    "pm_map: np.ndarray of mapped values in [0,1)",
+    "ulam_matrix: (P: np.ndarray, diagnostics: Dict)",
+    "canonical_gap: (gap: Optional[float], augmented_diag: Dict)",
+    "run_pipeline: Dict with alphas, gaps, regression results, fail-closed status"
+  ],
+  "dependencies": {
+    "stdlib": ["math", "typing"],
+    "third_party": ["numpy", "scipy"]
+  },
+  "public_api": [
+    {
+      "name": "BETA_PM",
+      "signature": "BETA_PM: float = 0.75",
+      "returns": "float",
+      "description": "Default PM map exponent beta"
+    },
+    {
+      "name": "KAPPA_THEORY",
+      "signature": "KAPPA_THEORY: float",
+      "returns": "float",
+      "description": "Theoretical universality exponent kappa = 2/(2-beta) ≈ 1.667 for beta=0.75"
+    },
+    {
+      "name": "MIN_GAP",
+      "signature": "MIN_GAP: float = 5e-5",
+      "returns": "float",
+      "description": "Minimum spectral gap threshold for regression inclusion"
+    },
+    {
+      "name": "N_VALID_MIN",
+      "signature": "N_VALID_MIN: int = 6",
+      "returns": "int",
+      "description": "Minimum number of valid gap points required for regression"
+    },
+    {
+      "name": "R2_GOOD",
+      "signature": "R2_GOOD: float = 0.97",
+      "returns": "float",
+      "description": "R-squared threshold for GOOD_SCALING qualification"
+    },
+    {
+      "name": "R2_PUB",
+      "signature": "R2_PUB: float = 0.985",
+      "returns": "float",
+      "description": "R-squared threshold for PUBLICATION_GRADE qualification"
+    },
+    {
+      "name": "pm_map",
+      "signature": "pm_map(x: np.ndarray, alpha: float, beta: float = BETA_PM) -> np.ndarray",
+      "returns": "np.ndarray",
+      "description": "Vectorized Pomeau-Manneville type-I intermittency map. Left branch: x + alpha*x^(1+beta) mod 1; right branch: 2x - 1"
+    },
+    {
+      "name": "ulam_matrix",
+      "signature": "ulam_matrix(alpha: float, n_bins=80, n_traj=80_000, seed=42, beta=BETA_PM) -> Tuple[np.ndarray, Dict]",
+      "returns": "Tuple[np.ndarray, Dict]",
+      "description": "Build row-stochastic Ulam transition matrix for the PM map"
+    },
+    {
+      "name": "canonical_gap",
+      "signature": "canonical_gap(P: np.ndarray, diag: Dict) -> Tuple[Optional[float], Dict]",
+      "returns": "Tuple[Optional[float], Dict]",
+      "description": "Compute spectral gap Delta = 1 - |lambda_2| with fail-closed guards"
+    },
+    {
+      "name": "compute_gap_point",
+      "signature": "compute_gap_point(alpha: float, n_bins=80, n_traj=80_000, seed=42, beta=BETA_PM) -> Tuple[Optional[float], Dict]",
+      "returns": "Tuple[Optional[float], Dict]",
+      "description": "Compute single (alpha -> gap) point with diagnostics"
+    },
+    {
+      "name": "loglog_regression",
+      "signature": "loglog_regression(alphas, gaps, min_gap=MIN_GAP, n_valid_min=N_VALID_MIN) -> Dict",
+      "returns": "Dict",
+      "description": "Fit log Delta = c + kappa*log alpha and return kappa_fit, R2, RMS_resid, stderr_kappa, CI95_kappa, qualificatif"
+    },
+    {
+      "name": "run_pipeline",
+      "signature": "run_pipeline(alpha_grid, n_bins=80, n_traj=80_000, seed=42, beta=BETA_PM, min_gap=MIN_GAP) -> Dict",
+      "returns": "Dict",
+      "description": "Run the full Ulam spectral gap pipeline over an alpha grid"
+    }
+  ],
+  "status": "ACTIVE",
+  "coverage": "81%",
+  "tests": "tests/test_MODULE_013.py",
+  "claim_ceiling": "LOCAL_ONLY__NO_EXTERNAL_PROOF"
+}

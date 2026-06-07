@@ -1,0 +1,164 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "MODULE_008_BENCHMARK_schema",
+  "title": "MODULE_008_BENCHMARK Schema",
+  "description": "Input/output schema for MODULE_008_BENCHMARK (gpts_core/benchmark.py)",
+  "definitions": {
+    "FeatureMatrix": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {"type": "number"}
+      },
+      "description": "2D list of floats (rows x features)"
+    },
+    "PredictionLockG2": {
+      "type": "object",
+      "required": ["primary_metric", "target_next_shadow_phase", "predicted_value", "strong_pass_interval", "normal_pass_interval"],
+      "properties": {
+        "primary_metric": {"type": "string"},
+        "target_next_shadow_phase": {"type": "integer"},
+        "predicted_value": {"type": "number"},
+        "strong_pass_interval": {
+          "type": "array",
+          "items": {"type": "number"},
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "normal_pass_interval": {
+          "type": "array",
+          "items": {"type": "number"},
+          "minItems": 2,
+          "maxItems": 2
+        }
+      }
+    },
+    "PredictionLockInput": {
+      "type": "object",
+      "required": ["gate_g2_numeric_prediction"],
+      "properties": {
+        "gate_g2_numeric_prediction": {"$ref": "#/definitions/PredictionLockG2"}
+      }
+    },
+    "ObservationInput": {
+      "type": "object",
+      "required": ["run_id", "phase", "ledger_replay_status", "control_effects", "production_unlocked", "stdout_retained", "stderr_retained"],
+      "properties": {
+        "run_id": {"type": "string"},
+        "phase": {"type": "integer"},
+        "ledger_replay_status": {"type": "string", "enum": ["PASS", "FAIL"]},
+        "control_effects": {"type": "integer"},
+        "production_unlocked": {"type": "boolean"},
+        "stdout_retained": {"type": "boolean"},
+        "stderr_retained": {"type": "boolean"}
+      }
+    },
+    "CompareResult": {
+      "type": "object",
+      "required": ["verdict", "production_unlocked", "interval_result", "result_hash"],
+      "properties": {
+        "generated_utc": {"type": "string"},
+        "primary_metric": {"type": "string"},
+        "target_phase": {"type": "integer"},
+        "predicted_value": {"type": ["number", "null"]},
+        "measured_value": {"type": ["number", "null"]},
+        "delta": {"type": ["number", "null"]},
+        "strong_pass_interval": {"type": ["array", "null"]},
+        "normal_pass_interval": {"type": ["array", "null"]},
+        "interval_result": {
+          "type": "string",
+          "enum": ["STRONG_PASS", "NORMAL_PASS", "OUT_OF_BOUNDS", "NOT_EVALUATED"]
+        },
+        "input_errors": {"type": "array", "items": {"type": "string"}},
+        "verdict": {
+          "type": "string",
+          "enum": [
+            "G2_STRONG_PASS_LAB_ONLY",
+            "G2_NORMAL_PASS_LAB_ONLY",
+            "G2_FAIL_RECALIBRATION_REQUIRED",
+            "FAIL_CLOSED_INVALID_INPUT",
+            "FAIL_CLOSED_NOT_EVALUATED"
+          ]
+        },
+        "production_unlocked": {"type": "boolean", "enum": [false]},
+        "production_impact": {"type": "string"},
+        "result_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
+      }
+    }
+  },
+  "type": "object",
+  "properties": {
+    "minmax_fit_input": {
+      "type": "object",
+      "required": ["matrix"],
+      "properties": {
+        "matrix": {"$ref": "#/definitions/FeatureMatrix"}
+      }
+    },
+    "minmax_fit_output": {
+      "type": "object",
+      "properties": {
+        "mins": {"type": "array", "items": {"type": "number"}},
+        "maxs": {"type": "array", "items": {"type": "number"}}
+      }
+    },
+    "train_linear_input": {
+      "type": "object",
+      "required": ["X", "y"],
+      "properties": {
+        "X": {"$ref": "#/definitions/FeatureMatrix"},
+        "y": {"type": "array", "items": {"type": "number"}},
+        "epochs": {"type": "integer", "default": 5000, "minimum": 1},
+        "lr": {"type": "number", "default": 0.05, "exclusiveMinimum": 0}
+      }
+    },
+    "train_linear_output": {
+      "type": "object",
+      "properties": {
+        "weights": {"type": "array", "items": {"type": "number"}},
+        "bias": {"type": "number"}
+      }
+    },
+    "predict_linear_input": {
+      "type": "object",
+      "required": ["X", "weights", "bias"],
+      "properties": {
+        "X": {"$ref": "#/definitions/FeatureMatrix"},
+        "weights": {"type": "array", "items": {"type": "number"}},
+        "bias": {"type": "number"},
+        "clip": {"type": "boolean", "default": true}
+      }
+    },
+    "predict_linear_output": {
+      "type": "array",
+      "items": {"type": "number"}
+    },
+    "mse_score_input": {
+      "type": "object",
+      "required": ["predictions", "truth"],
+      "properties": {
+        "predictions": {"type": "object", "additionalProperties": {"type": "number"}},
+        "truth": {"type": "object", "additionalProperties": {"type": "number"}},
+        "missing_penalty": {"type": "number", "default": 0.10},
+        "invalid_penalty": {"type": "number", "default": 0.20},
+        "range_penalty": {"type": "number", "default": 0.05}
+      }
+    },
+    "mse_score_output": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 1.0
+    },
+    "compare_prediction_lock_input": {
+      "type": "object",
+      "required": ["prediction_lock", "observation"],
+      "properties": {
+        "prediction_lock": {"$ref": "#/definitions/PredictionLockInput"},
+        "observation": {"$ref": "#/definitions/ObservationInput"}
+      }
+    },
+    "compare_prediction_lock_output": {
+      "$ref": "#/definitions/CompareResult"
+    }
+  }
+}

@@ -1,0 +1,459 @@
+{
+  "_schema": "MODULE_REGISTRY",
+  "_version": "1.0.0",
+  "_date": "2026-06-07",
+  "_claim_ceiling": "LOCAL_ONLY__NO_EXTERNAL_PROOF",
+  "_total_modules": 18,
+  "_source": "EXTRACTION_ONLY — no new architecture; all modules extracted from existing gpts_core package and governance artifacts",
+
+  "summary": {
+    "total_modules": 18,
+    "code_modules": 16,
+    "governance_modules": 2,
+    "total_source_lines": 2242,
+    "total_tests": 114,
+    "equivalence_tests": 21,
+    "overall_coverage": "65%",
+    "stdlib_only_modules": ["MODULE_002", "MODULE_003", "MODULE_004", "MODULE_005", "MODULE_006", "MODULE_007", "MODULE_008", "MODULE_009", "MODULE_010", "MODULE_011", "MODULE_012", "MODULE_014", "MODULE_015"],
+    "numpy_dependent_modules": ["MODULE_001", "MODULE_013"],
+    "claim_ceiling": "LOCAL_ONLY__NO_EXTERNAL_PROOF"
+  },
+
+  "dependency_graph": {
+    "MODULE_001_SIGNALS": {"depends_on": [], "required_by": ["MODULE_015_CLI"]},
+    "MODULE_002_CLASSIFIER": {"depends_on": [], "required_by": ["MODULE_015_CLI"]},
+    "MODULE_003_EVIDENCE": {"depends_on": [], "required_by": ["MODULE_009_PROMOTION", "MODULE_015_CLI"]},
+    "MODULE_004_GATE": {"depends_on": [], "required_by": ["MODULE_015_CLI"]},
+    "MODULE_005_LEDGER": {"depends_on": [], "required_by": ["MODULE_009_PROMOTION", "MODULE_015_CLI"]},
+    "MODULE_006_ADJUDICATION": {"depends_on": [], "required_by": ["MODULE_015_CLI"]},
+    "MODULE_007_MANIFEST": {"depends_on": [], "required_by": ["MODULE_003_EVIDENCE", "MODULE_015_CLI"]},
+    "MODULE_008_BENCHMARK": {"depends_on": [], "required_by": ["MODULE_015_CLI"]},
+    "MODULE_009_PROMOTION": {"depends_on": ["MODULE_003_EVIDENCE", "MODULE_005_LEDGER"], "required_by": ["MODULE_015_CLI"]},
+    "MODULE_010_COHERENCE": {"depends_on": [], "required_by": ["MODULE_015_CLI"]},
+    "MODULE_011_AUDIT_CLAIMS": {"depends_on": [], "required_by": ["MODULE_012_SCORE_REPORT", "MODULE_015_CLI"]},
+    "MODULE_012_SCORE_REPORT": {"depends_on": ["MODULE_011_AUDIT_CLAIMS"], "required_by": ["MODULE_015_CLI"]},
+    "MODULE_013_SPECTRAL_GAP": {"depends_on": [], "required_by": ["MODULE_015_CLI"]},
+    "MODULE_014_DYNAMICS": {"depends_on": [], "required_by": ["MODULE_015_CLI"]},
+    "MODULE_015_CLI": {"depends_on": ["MODULE_001","MODULE_002","MODULE_003","MODULE_004","MODULE_005","MODULE_006","MODULE_007","MODULE_008","MODULE_009","MODULE_010","MODULE_011","MODULE_012","MODULE_013","MODULE_014"], "required_by": []},
+    "MODULE_016_CORE_INIT": {"depends_on": ["MODULE_001","MODULE_002","MODULE_003","MODULE_004","MODULE_005","MODULE_006","MODULE_007","MODULE_008","MODULE_009","MODULE_010","MODULE_011","MODULE_012","MODULE_013","MODULE_014","MODULE_015"], "required_by": []},
+    "MODULE_017_EXOCHRONOS_STATE": {"depends_on": [], "required_by": ["MODULE_018_CLASSIFICATION_MATRIX"]},
+    "MODULE_018_CLASSIFICATION_MATRIX": {"depends_on": ["MODULE_006_ADJUDICATION", "MODULE_017_EXOCHRONOS_STATE"], "required_by": []}
+  },
+
+  "modules": [
+    {
+      "module_id": "MODULE_001_SIGNALS",
+      "version": "1.0.0",
+      "source_file": "gpts_core/signals.py",
+      "description": "Time-series signal analysis — entropy, autocorrelation, spectral power, AR(2) fitting, ordinal motifs, structure scoring",
+      "function": "Compute structural and statistical properties of 1-D numerical signals for metric quality assessment",
+      "status": "PRODUCTION_CANDIDATE",
+      "coverage": "69%",
+      "lines": 171,
+      "stdlib_only": false,
+      "third_party": ["numpy", "scipy"],
+      "public_functions": [
+        "entropy_norm", "compression_ratio", "autocorr", "spectral_analysis",
+        "motif_share", "window_stats", "ar2_fit", "structure_score",
+        "analyze", "step_metrics", "generate_null", "bootstrap_ci"
+      ],
+      "key_outputs": ["structure_score [0,1]", "analyze() → 14-key metric dict", "bootstrap_ci → mean/low/high"],
+      "claim_ceiling": "LOCAL_ONLY__NO_EXTERNAL_PROOF",
+      "equivalence_tests": 0,
+      "behavioral_tests": 12
+    },
+    {
+      "module_id": "MODULE_002_CLASSIFIER",
+      "version": "1.0.0",
+      "source_file": "gpts_core/classifier.py",
+      "description": "6-label metric text classifier — observed/computed/reported/simulated/symbolic/unsupported",
+      "function": "Classify a metric row into one of 6 epistemic labels using regex heuristics with confidence score",
+      "status": "PRODUCTION_CANDIDATE",
+      "coverage": "64%",
+      "lines": 59,
+      "stdlib_only": true,
+      "third_party": [],
+      "public_functions": ["classify_metric"],
+      "public_constants": ["LABELS"],
+      "key_outputs": ["(label: str, reasons: List[str], confidence: float)"],
+      "claim_ceiling": "LOCAL_ONLY__NO_EXTERNAL_PROOF",
+      "equivalence_tests": 0,
+      "behavioral_tests": 8
+    },
+    {
+      "module_id": "MODULE_003_EVIDENCE",
+      "version": "1.0.0",
+      "source_file": "gpts_core/evidence.py",
+      "description": "Raw output record validation, SHA-256 hashing, ZIP audit, JSONL loading, metric passport validation",
+      "function": "Validate and hash raw experimental records; audit ZIP artifacts; check metric passport integrity",
+      "status": "PRODUCTION_CANDIDATE",
+      "coverage": "66%",
+      "lines": 170,
+      "stdlib_only": true,
+      "third_party": [],
+      "public_functions": [
+        "sha256_text", "sha256_bytes", "sha256_file", "canonical_json", "sha256_json",
+        "build_raw_record", "validate_raw_record", "validate_raw_records",
+        "load_jsonl", "validate_metric_passport", "audit_zip", "summarize_csv"
+      ],
+      "public_classes": ["RecordVerdict", "RawGateReport"],
+      "key_outputs": ["RecordVerdict.valid (bool)", "RawGateReport.pass_gate (bool)", "audit_zip → structured report"],
+      "claim_ceiling": "LOCAL_ONLY__NO_EXTERNAL_PROOF",
+      "equivalence_tests": 0,
+      "behavioral_tests": 15
+    },
+    {
+      "module_id": "MODULE_004_GATE",
+      "version": "1.0.0",
+      "source_file": "gpts_core/gate.py",
+      "description": "Claim classification gate (BLOCKED/ALLOWED_BOUNDED/UNKNOWN), evidence scoring with 6 dimensions, proof firewall",
+      "function": "Classify text claims for public safety; compute weighted evidence score; apply proof firewall before any public promotion",
+      "status": "PRODUCTION_CANDIDATE",
+      "coverage": "91%",
+      "lines": 117,
+      "stdlib_only": true,
+      "third_party": [],
+      "public_functions": ["classify_claim", "compute_evidence_score", "from_gate_counts", "maturity_map", "proof_firewall"],
+      "public_classes": ["ClaimStatus", "ClaimResult", "EvidenceInput", "EvidenceScore"],
+      "public_constants": ["EVIDENCE_WEIGHTS", "MATURITY_STAGES"],
+      "key_outputs": [
+        "ClaimResult.status: BLOCKED | ALLOWED_BOUNDED | UNKNOWN_REQUIRES_REVIEW",
+        "EvidenceScore.final_score [0,1]",
+        "EvidenceScore.public_claim_allowed (bool)",
+        "proof_firewall → {verdict: BLOCKED_FAIL_CLOSED | PASS}"
+      ],
+      "fail_closed_behavior": "Any missing evidence dimension or forbidden pattern → BLOCKED; no auto-approval",
+      "claim_ceiling": "LOCAL_ONLY__NO_EXTERNAL_PROOF",
+      "equivalence_tests": 0,
+      "behavioral_tests": 14
+    },
+    {
+      "module_id": "MODULE_005_LEDGER",
+      "version": "1.0.0",
+      "source_file": "gpts_core/ledger.py",
+      "description": "SHA-256 chain append-only audit ledger; context citation lock for long-context proof-of-citation",
+      "function": "Maintain tamper-evident event chain; enforce citation verification in long-context corpora",
+      "status": "PRODUCTION_CANDIDATE",
+      "coverage": "64%",
+      "lines": 101,
+      "stdlib_only": true,
+      "third_party": [],
+      "public_classes": ["AuditLedger", "ContextCitationLock"],
+      "key_outputs": [
+        "AuditLedger.verify_chain() → {valid: bool, first_error: Optional[str]}",
+        "ContextCitationLock.has_citation() → bool"
+      ],
+      "fail_closed_behavior": "require_citation() raises ValueError if value not found — never silently passes",
+      "claim_ceiling": "LOCAL_ONLY__NO_EXTERNAL_PROOF",
+      "equivalence_tests": 0,
+      "behavioral_tests": 10
+    },
+    {
+      "module_id": "MODULE_006_ADJUDICATION",
+      "version": "1.0.0",
+      "source_file": "gpts_core/adjudication.py",
+      "description": "Inter-rater adjudication scoring — confusion matrix, per-label precision/recall, macro metrics",
+      "function": "Score human vs automated metric classification; build and analyze confusion matrices",
+      "status": "PRODUCTION_CANDIDATE",
+      "coverage": "82%",
+      "lines": 44,
+      "stdlib_only": true,
+      "third_party": [],
+      "public_functions": [
+        "build_confusion_matrix", "score_label", "score_adjudication",
+        "read_adjudication_csv", "write_confusion_matrix_csv"
+      ],
+      "public_constants": ["LABELS", "EXTRA_LABELS"],
+      "key_outputs": ["score_adjudication → {per_label: {precision, recall, tp}, macro_precision, macro_recall}"],
+      "claim_ceiling": "LOCAL_ONLY__NO_EXTERNAL_PROOF",
+      "equivalence_tests": 0,
+      "behavioral_tests": 8
+    },
+    {
+      "module_id": "MODULE_007_MANIFEST",
+      "version": "1.0.0",
+      "source_file": "gpts_core/manifest.py",
+      "description": "File hashing, manifest building, aggregate hash, ZIP safe extraction",
+      "function": "Build cryptographic manifests of file trees; safely extract ZIPs with path-traversal protection",
+      "status": "PRODUCTION_CANDIDATE",
+      "coverage": "90%",
+      "lines": 64,
+      "stdlib_only": true,
+      "third_party": [],
+      "public_functions": [
+        "sha256_file", "sha256_bytes", "kind_for", "build_manifest",
+        "aggregate_hash", "write_manifest", "safe_extract_zip"
+      ],
+      "key_outputs": ["build_manifest → List[{path, sha256, size, kind}]", "aggregate_hash → str", "safe_extract_zip → List[str]"],
+      "claim_ceiling": "LOCAL_ONLY__NO_EXTERNAL_PROOF",
+      "equivalence_tests": 0,
+      "behavioral_tests": 9
+    },
+    {
+      "module_id": "MODULE_008_BENCHMARK",
+      "version": "1.0.0",
+      "source_file": "gpts_core/benchmark.py",
+      "description": "Stdlib-only linear regression (gradient descent), MSE stability scoring with penalty system, prediction lock comparison",
+      "function": "Train and evaluate linear models without external ML libraries; score prediction locks against observations",
+      "status": "PRODUCTION_CANDIDATE",
+      "coverage": "70%",
+      "lines": 141,
+      "stdlib_only": true,
+      "third_party": [],
+      "public_functions": [
+        "minmax_fit", "minmax_transform", "train_linear", "predict_linear",
+        "read_feature_csv", "mse_score", "read_score_csv", "compare_prediction_lock"
+      ],
+      "key_outputs": [
+        "train_linear → (weights: List[float], bias: float)",
+        "mse_score → float [0,1]",
+        "compare_prediction_lock → {verdict, delta, details}"
+      ],
+      "claim_ceiling": "LOCAL_ONLY__NO_EXTERNAL_PROOF",
+      "equivalence_tests": 9,
+      "behavioral_tests": 10
+    },
+    {
+      "module_id": "MODULE_009_PROMOTION",
+      "version": "1.0.0",
+      "source_file": "gpts_core/promotion.py",
+      "description": "Promotion evaluation from CSV matrices, SEAL continuity ledger validation, JSONL event ledger replay",
+      "function": "Evaluate promotion candidates against multi-criteria matrices; validate continuity chains; replay event logs",
+      "status": "PRODUCTION_CANDIDATE",
+      "coverage": "65%",
+      "lines": 122,
+      "stdlib_only": true,
+      "third_party": [],
+      "public_functions": [
+        "read_matrix_csv", "evaluate_promotion",
+        "validate_seal_record", "validate_seal_ledger", "replay_jsonl_ledger"
+      ],
+      "key_outputs": [
+        "evaluate_promotion → {pass_count, fail_count, verdict}",
+        "replay_jsonl_ledger → {valid: bool, chain_length, first_error}"
+      ],
+      "fail_closed_behavior": "Missing files or broken chains → BLOCKED verdict; never promotes on incomplete evidence",
+      "claim_ceiling": "LOCAL_ONLY__NO_EXTERNAL_PROOF",
+      "equivalence_tests": 0,
+      "behavioral_tests": 8
+    },
+    {
+      "module_id": "MODULE_010_COHERENCE",
+      "version": "1.0.0",
+      "source_file": "gpts_core/coherence.py",
+      "description": "Information-theoretic coherence measurement — Shannon entropy, joint entropy, mutual information, coherence passport",
+      "function": "Quantify information coherence between system modules; build and validate sealed coherence passports",
+      "status": "PRODUCTION_CANDIDATE",
+      "coverage": "78%",
+      "lines": 189,
+      "stdlib_only": true,
+      "third_party": [],
+      "public_functions": [
+        "shannon_entropy", "joint_entropy", "mutual_information", "global_coherence",
+        "digitize", "compute_metric_fields", "normalize_observations",
+        "build_coherence_passport", "seal_passport_hashes", "validate_coherence_passport"
+      ],
+      "key_outputs": [
+        "shannon_entropy → float (bits)",
+        "build_coherence_passport → sealed Dict with SHA-256 chain",
+        "validate_coherence_passport → {verdict: VALID|INVALID, errors: List[str]}"
+      ],
+      "claim_ceiling": "LOCAL_ONLY__NO_EXTERNAL_PROOF",
+      "equivalence_tests": 12,
+      "behavioral_tests": 12
+    },
+    {
+      "module_id": "MODULE_011_AUDIT_CLAIMS",
+      "version": "1.0.0",
+      "source_file": "gpts_core/audit_claims.py",
+      "description": "Claim decomposition, multi-channel evidence extraction, 7-section canonical audit report generation",
+      "function": "Decompose compound claims into testable propositions; extract evidence; generate structured audit reports with weakness taxonomy",
+      "status": "PRODUCTION_CANDIDATE",
+      "coverage": "52%",
+      "lines": 351,
+      "stdlib_only": true,
+      "third_party": [],
+      "public_functions": [
+        "load_artifacts", "extract_evidence", "decompose_claim", "assess_proposition",
+        "detect_logical_contradictions", "audit_claim", "inspect_document",
+        "validate_canonical_report", "batch_audit"
+      ],
+      "public_classes": ["SourceRecord", "EvidenceSlice", "Weakness", "PropositionAssessment", "AuditReport"],
+      "public_constants": ["VERDICTS", "WEAKNESS_TYPES", "STATUSES", "SEVERITIES", "CAUSES", "STRICT_SECTIONS"],
+      "key_outputs": [
+        "audit_claim → AuditReport (dataclass with render_markdown())",
+        "validate_canonical_report → (bool, List[str])",
+        "batch_audit → {total, passed, failed, results}"
+      ],
+      "fail_closed_behavior": "Missing evidence → UNSUPPORTED (never UNKNOWN or auto-SUPPORTED)",
+      "claim_ceiling": "LOCAL_ONLY__NO_EXTERNAL_PROOF",
+      "equivalence_tests": 0,
+      "behavioral_tests": 14
+    },
+    {
+      "module_id": "MODULE_012_SCORE_REPORT",
+      "version": "1.0.0",
+      "source_file": "gpts_core/score_report.py",
+      "description": "7-component weighted audit report scoring engine — verdicts, coverage, confidence, discriminant tests, separation, taxonomy, fail-closed",
+      "function": "Score a markdown audit report against an oracle case JSON; returns total score [0,100] with per-component breakdown",
+      "status": "PRODUCTION_CANDIDATE",
+      "coverage": "70%",
+      "lines": 280,
+      "stdlib_only": true,
+      "third_party": [],
+      "public_functions": [
+        "normalize_text", "extract_sections", "extract_verdict", "extract_confidence",
+        "score_verdicts", "score_critical_points", "score_confidence",
+        "score_discriminant_tests", "score_probative_separation",
+        "score_weakness_taxonomy", "score_fail_closed",
+        "validate_case_json", "evaluate", "score_audit_report"
+      ],
+      "public_classes": ["CanonicalValidation", "ComponentScores"],
+      "key_outputs": [
+        "score_audit_report → {total_score, components, notes}",
+        "evaluate → {total, pass, component_scores, oracle_used}"
+      ],
+      "scoring_weights": {
+        "verdicts": 20, "critical_points": 20, "confidence": 15,
+        "discriminant_tests": 15, "probative_separation": 10,
+        "weakness_taxonomy": 10, "fail_closed": 10
+      },
+      "claim_ceiling": "LOCAL_ONLY__NO_EXTERNAL_PROOF",
+      "equivalence_tests": 0,
+      "behavioral_tests": 12
+    },
+    {
+      "module_id": "MODULE_013_SPECTRAL_GAP",
+      "version": "1.0.0",
+      "source_file": "gpts_core/spectral_gap.py",
+      "description": "Pomeau-Manneville type-I map dynamics, Ulam discretization, spectral gap computation, log-log regression for κ exponent",
+      "function": "Compute spectral gap Δ = 1 - |λ₂| of Ulam transition matrices; fit κ in log Δ ∝ κ·log α",
+      "status": "PRODUCTION_CANDIDATE",
+      "coverage": "81%",
+      "lines": 126,
+      "stdlib_only": false,
+      "third_party": ["numpy", "scipy"],
+      "public_functions": [
+        "pm_map", "ulam_matrix", "canonical_gap",
+        "compute_gap_point", "loglog_regression", "run_pipeline"
+      ],
+      "public_constants": ["BETA_PM", "KAPPA_THEORY", "MIN_GAP", "N_VALID_MIN", "R2_GOOD", "R2_PUB"],
+      "key_outputs": [
+        "canonical_gap → (gap: Optional[float], diagnostics: Dict)",
+        "loglog_regression → {kappa_fit, r2, n_valid, stderr_kappa}",
+        "run_pipeline → {alphas, gaps, regression, qualification}"
+      ],
+      "qualification_thresholds": {"r2_good": 0.97, "r2_publication": 0.985, "stderr_publication": 0.05},
+      "claim_ceiling": "LOCAL_ONLY__NO_EXTERNAL_PROOF",
+      "equivalence_tests": 0,
+      "behavioral_tests": 10
+    },
+    {
+      "module_id": "MODULE_014_DYNAMICS",
+      "version": "1.0.0",
+      "source_file": "gpts_core/dynamics.py",
+      "description": "Nonlinear continuum state dynamics and fractal coherence tracker",
+      "function": "Simulate coupled nonlinear state evolution (ContinuumState) and cycle-based fractal coherence tracking (FractalEngine)",
+      "status": "PRODUCTION_CANDIDATE",
+      "coverage": "82%",
+      "lines": 110,
+      "stdlib_only": true,
+      "third_party": [],
+      "public_functions": ["energy", "step_continuum", "run_continuum"],
+      "public_classes": ["ContinuumState", "FractalState", "FractalEngine"],
+      "key_outputs": [
+        "step_continuum → ContinuumState (all fields clamped to [0,1] or valid range)",
+        "FractalEngine.get_statistics() → {mean, std, min, max}",
+        "FractalEngine.is_stable() → bool"
+      ],
+      "claim_ceiling": "LOCAL_ONLY__NO_EXTERNAL_PROOF",
+      "equivalence_tests": 0,
+      "behavioral_tests": 8
+    },
+    {
+      "module_id": "MODULE_015_CLI",
+      "version": "1.0.0",
+      "source_file": "gpts_core/cli.py",
+      "description": "Unified 14-subcommand CLI interface for all gpts_core operations",
+      "function": "Entry point for running gpts_core pipelines from the command line",
+      "status": "PRODUCTION_CANDIDATE",
+      "coverage": "0%",
+      "lines": 183,
+      "stdlib_only": false,
+      "third_party": ["all gpts_core modules"],
+      "public_functions": ["build_parser", "main"],
+      "subcommands": [
+        "analyze-signal", "classify-metric", "validate-records", "classify-claim",
+        "evidence-score", "replay-ledger", "seal-audit", "promote", "build-manifest",
+        "adjudicate", "coherence-passport", "audit-claim", "score-report", "spectral-gap"
+      ],
+      "note": "0% coverage — CLI tested via subprocess; not unit-testable without refactor",
+      "claim_ceiling": "LOCAL_ONLY__NO_EXTERNAL_PROOF",
+      "equivalence_tests": 0,
+      "behavioral_tests": 0
+    },
+    {
+      "module_id": "MODULE_016_CORE_INIT",
+      "version": "1.0.0",
+      "source_file": "gpts_core/__init__.py",
+      "description": "Package entry point — re-exports all public symbols from all 15 gpts_core modules",
+      "function": "Single-import access to entire gpts_core public API",
+      "status": "PRODUCTION_CANDIDATE",
+      "coverage": "100%",
+      "lines": 14,
+      "stdlib_only": false,
+      "third_party": ["all gpts_core modules"],
+      "public_api": "Re-exports all symbols from: signals, classifier, evidence, gate, ledger, adjudication, manifest, benchmark, promotion, coherence, audit_claims, score_report, spectral_gap, dynamics",
+      "claim_ceiling": "LOCAL_ONLY__NO_EXTERNAL_PROOF",
+      "equivalence_tests": 0,
+      "behavioral_tests": 1
+    },
+    {
+      "module_id": "MODULE_017_EXOCHRONOS_STATE",
+      "version": "1.0.0",
+      "source_file": "EXOCHRONOS_STATE_v1.json",
+      "description": "Official EXOCHRONOS system state snapshot — component readiness, gap assessment, packet status, owner decision point",
+      "function": "Governance artifact: authoritative record of system state at convergence milestone",
+      "status": "ACTIVE",
+      "module_type": "GOVERNANCE",
+      "coverage": "N/A",
+      "key_fields": [
+        "convergence.verdict",
+        "component_status.*",
+        "gap_assessment.technical_gap",
+        "gap_assessment.data_gap",
+        "packet.canonical",
+        "packet.requires_owner_confirmation",
+        "owner_decision_point.option_a",
+        "owner_decision_point.option_b",
+        "next_phase.next_artifact",
+        "next_phase.next_metric"
+      ],
+      "claim_ceiling": "LOCAL_ONLY__NO_EXTERNAL_PROOF"
+    },
+    {
+      "module_id": "MODULE_018_CLASSIFICATION_MATRIX",
+      "version": "1.0.0",
+      "source_file": "classification_matrix_schema_v1.json",
+      "description": "Schema template for real auditor data collection — 5 auditors × 8 claims = 40 rows, C08 gate, Krippendorff α trigger",
+      "function": "Governance artifact: defines the structure of the first real classification dataset",
+      "status": "TEMPLATE__AWAITING_CANONICAL_PACKET",
+      "module_type": "GOVERNANCE",
+      "coverage": "N/A",
+      "key_fields": [
+        "packet_reference.packet_hash",
+        "auditors[5]",
+        "label_schema.values",
+        "label_schema.confidence_range",
+        "classifications[40]",
+        "computed_metrics.krippendorff_alpha",
+        "c08_gate.alpha_threshold_minimum",
+        "c08_gate.alpha_threshold_substantial",
+        "pipeline_log.*"
+      ],
+      "auditors": ["HUMAN_01", "HUMAN_02", "GPT", "CLAUDE", "GROK"],
+      "c08_gate_thresholds": {"minimum": 0.667, "substantial": 0.800},
+      "claim_ceiling": "LOCAL_ONLY__NO_EXTERNAL_PROOF"
+    }
+  ]
+}

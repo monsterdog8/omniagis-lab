@@ -1,0 +1,60 @@
+{
+  "module_id": "MODULE_001_SIGNALS",
+  "version": "1.0.0",
+  "source_file": "gpts_core/signals.py",
+  "description": "Time-series structure analysis: entropy, compression, autocorrelation, spectral, AR(2), motif metrics, composite structure score, step-response metrics, null model generation, and bootstrap confidence intervals.",
+  "function": "Time-series signal analysis — entropy, autocorrelation, spectral, AR(2), motif, structure scoring",
+  "inputs": [
+    {"name": "x", "type": "Sequence[float] | np.ndarray", "description": "1-D input signal"},
+    {"name": "sr", "type": "float", "description": "Sample rate in Hz (default 256.0)"},
+    {"name": "bins", "type": "int", "description": "Number of histogram bins for entropy (default 32)"},
+    {"name": "maxlag", "type": "int", "description": "Maximum autocorrelation lag (default 64)"},
+    {"name": "alphabet", "type": "int", "description": "Alphabet size for motif encoding (default 8)"},
+    {"name": "mlen", "type": "int", "description": "Motif length (default 4)"},
+    {"name": "window", "type": "int", "description": "Window size for window_stats (default 512)"},
+    {"name": "row", "type": "Dict[str, float]", "description": "Metric dict produced by analyze() for structure_score"},
+    {"name": "t", "type": "np.ndarray", "description": "Time axis for step_metrics"},
+    {"name": "y", "type": "np.ndarray", "description": "Signal values for step_metrics"},
+    {"name": "eps", "type": "float", "description": "Settling band fraction for step_metrics (default 0.02)"},
+    {"name": "seed", "type": "int", "description": "RNG seed for null model and bootstrap"},
+    {"name": "kind", "type": "str", "description": "Null model kind: shuffle | gaussian | same_marginal | phase_scramble"},
+    {"name": "values", "type": "List[float]", "description": "Values for bootstrap CI"},
+    {"name": "n_boot", "type": "int", "description": "Bootstrap resamples (default 200)"}
+  ],
+  "outputs": [
+    {"name": "entropy_norm", "type": "float", "description": "Shannon entropy normalized to [0,1]"},
+    {"name": "compression_ratio", "type": "float", "description": "zlib compression ratio"},
+    {"name": "autocorr", "type": "Tuple[float, float]", "description": "(lag-1 autocorr, max abs autocorr)"},
+    {"name": "spectral_analysis", "type": "Tuple[float, float, float]", "description": "(peak_freq_hz, spectral_concentration, spectral_entropy)"},
+    {"name": "motif_share", "type": "float", "description": "Fraction of most common motif"},
+    {"name": "window_stats", "type": "Tuple[float, float, float]", "description": "(peak_freq_cv, entropy_cv, segment_jsd_mean)"},
+    {"name": "ar2_fit", "type": "Tuple[float, float, float, float, float]", "description": "(a1, a2, r2, estimated_freq_hz, root_radius)"},
+    {"name": "structure_score", "type": "float", "description": "Composite structure score in [0,1]"},
+    {"name": "analyze", "type": "Dict[str, float]", "description": "Flat dict of all structure metrics"},
+    {"name": "step_metrics", "type": "Dict[str, float]", "description": "Step-response metrics dict"},
+    {"name": "generate_null", "type": "np.ndarray", "description": "Null-model surrogate signal"},
+    {"name": "bootstrap_ci", "type": "Dict[str, float]", "description": "Bootstrap mean + 95% CI dict"}
+  ],
+  "dependencies": {
+    "numpy": ">=1.21",
+    "scipy": ">=1.7"
+  },
+  "public_api": [
+    "entropy_norm",
+    "compression_ratio",
+    "autocorr",
+    "spectral_analysis",
+    "motif_share",
+    "window_stats",
+    "ar2_fit",
+    "structure_score",
+    "analyze",
+    "step_metrics",
+    "generate_null",
+    "bootstrap_ci"
+  ],
+  "status": "PRODUCTION_CANDIDATE",
+  "coverage": "69%",
+  "tests": "tests/test_MODULE_001.py",
+  "claim_ceiling": "LOCAL_ONLY__NO_EXTERNAL_PROOF"
+}

@@ -1,0 +1,91 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MODULE_014_DYNAMICS API Schema",
+  "description": "Input/output contracts for the dynamics module public API",
+  "definitions": {
+    "continuum_state": {
+      "type": "object",
+      "required": ["psi", "F", "S", "C", "R", "Q"],
+      "properties": {
+        "psi": {"type": "number", "minimum": 0.0, "maximum": 1.0, "description": "Coherence"},
+        "F":   {"type": "number", "minimum": 0.0, "maximum": 1.0, "description": "Fusion"},
+        "S":   {"type": "number", "minimum": 0.0, "maximum": 1.0, "description": "Entropy"},
+        "C":   {"type": "number", "minimum": 0.0, "maximum": 1.0, "description": "Chaos"},
+        "R":   {"type": "number", "description": "Resonance Hz"},
+        "Q":   {"type": "number", "minimum": 0.0, "description": "Derived energy"}
+      }
+    },
+    "fractal_state": {
+      "type": "object",
+      "required": ["coherence", "entropy", "resonance_hz", "drift"],
+      "properties": {
+        "coherence":     {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "entropy":       {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "resonance_hz":  {"type": "number", "minimum": 0.0},
+        "drift":         {"type": "number", "minimum": 0.0}
+      }
+    },
+    "statistics_output": {
+      "type": "object",
+      "required": ["mean", "std", "min", "max"],
+      "properties": {
+        "mean": {"type": "number"},
+        "std":  {"type": "number", "minimum": 0.0},
+        "min":  {"type": "number"},
+        "max":  {"type": "number"}
+      }
+    }
+  },
+  "functions": {
+    "energy": {
+      "description": "Q = (F * psi) / (1 + S) * R",
+      "input": {
+        "state": {"$ref": "#/definitions/continuum_state"}
+      },
+      "output": {"type": "number", "minimum": 0.0}
+    },
+    "step_continuum": {
+      "description": "Advance state by one discrete time step with Gaussian noise",
+      "input": {
+        "state":     {"$ref": "#/definitions/continuum_state"},
+        "noise_std": {"type": "number", "minimum": 0.0, "default": 0.002},
+        "rng":       {"type": ["object", "null"], "description": "random.Random instance or null"}
+      },
+      "output": {"$ref": "#/definitions/continuum_state"}
+    },
+    "run_continuum": {
+      "description": "Run continuum dynamics for n_steps, return list of state dicts",
+      "input": {
+        "n_steps":   {"type": "integer", "minimum": 0},
+        "initial":   {"oneOf": [{"$ref": "#/definitions/continuum_state"}, {"type": "null"}]},
+        "noise_std": {"type": "number", "minimum": 0.0, "default": 0.002},
+        "seed":      {"type": ["integer", "null"]}
+      },
+      "output": {
+        "type": "array",
+        "items": {"$ref": "#/definitions/continuum_state"},
+        "description": "List of n_steps+1 state dicts"
+      }
+    },
+    "FractalEngine.compute_metrics": {
+      "description": "Compute fractal metrics for next cycle, advances cycle_count",
+      "input": {
+        "cycle_id": {"type": ["integer", "null"]}
+      },
+      "output": {"$ref": "#/definitions/fractal_state"}
+    },
+    "FractalEngine.get_statistics": {
+      "description": "Return mean, std, min, max of coherence history",
+      "input": {},
+      "output": {"$ref": "#/definitions/statistics_output"}
+    },
+    "FractalEngine.is_stable": {
+      "description": "Return True if drift < drift_threshold and coherence > coherence_threshold",
+      "input": {
+        "drift_threshold":     {"type": "number", "default": 0.0001},
+        "coherence_threshold": {"type": "number", "default": 0.999}
+      },
+      "output": {"type": "boolean"}
+    }
+  }
+}

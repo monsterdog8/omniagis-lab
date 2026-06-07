@@ -1,0 +1,33 @@
+{
+  "module_id": "MODULE_002_CLASSIFIER",
+  "version": "1.0.0",
+  "source_file": "gpts_core/classifier.py",
+  "description": "Heuristic 6-label metric text classifier. Classifies extracted metric rows into audit categories using regex patterns. Labels require manual review before use as evidence.",
+  "function": "6-label metric text classification (observed/computed/reported/simulated/symbolic/unsupported)",
+  "inputs": [
+    {"name": "metric_name", "type": "str", "description": "Name of the metric being classified"},
+    {"name": "value_raw", "type": "str", "description": "Raw string value of the metric"},
+    {"name": "context", "type": "str", "description": "Surrounding text context (default empty string)"},
+    {"name": "path", "type": "str", "description": "Source file path for the metric row (default empty string)"},
+    {"name": "row_type", "type": "str", "description": "Row type hint: metric | equation | recalculation (default 'metric')"},
+    {"name": "recalculable", "type": "Optional[str]", "description": "Whether the row is recalculable: 'True' or None"},
+    {"name": "result", "type": "Optional[str]", "description": "Numeric result string if row_type is equation/recalculation"}
+  ],
+  "outputs": [
+    {"name": "label", "type": "str", "description": "One of: observed / computed / reported / simulated / symbolic / unsupported"},
+    {"name": "reasons", "type": "List[str]", "description": "List of reason codes explaining the classification"},
+    {"name": "confidence", "type": "float", "description": "Confidence score in [0, 1]"}
+  ],
+  "dependencies": {
+    "re": "stdlib",
+    "math": "stdlib"
+  },
+  "public_api": [
+    "LABELS",
+    "classify_metric"
+  ],
+  "status": "PRODUCTION_CANDIDATE",
+  "coverage": "64%",
+  "tests": "tests/test_MODULE_002.py",
+  "claim_ceiling": "LOCAL_ONLY__NO_EXTERNAL_PROOF"
+}

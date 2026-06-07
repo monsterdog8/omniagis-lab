@@ -1,0 +1,164 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MODULE_003_EVIDENCE API Schema",
+  "description": "Input/output contracts for the evidence module public API",
+  "definitions": {
+    "sha256_string": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "SHA-256 hex digest prefixed with 'sha256:'"
+    },
+    "raw_record": {
+      "type": "object",
+      "required": ["run_id", "task_id", "output_id", "model_slot", "raw_output", "token_count", "latency_ms", "timestamp", "output_hash"],
+      "properties": {
+        "run_id": {"type": "string"},
+        "task_id": {"type": "string"},
+        "output_id": {"type": "string"},
+        "model_slot": {"type": "string"},
+        "raw_output": {"type": "string"},
+        "token_count": {"type": "integer", "minimum": 0},
+        "latency_ms": {"type": "integer", "minimum": 0},
+        "timestamp": {"type": "string"},
+        "output_hash": {"$ref": "#/definitions/sha256_string"}
+      }
+    },
+    "record_verdict": {
+      "type": "object",
+      "required": ["output_id", "valid", "errors", "computed_hash", "declared_hash"],
+      "properties": {
+        "output_id": {"type": "string"},
+        "valid": {"type": "boolean"},
+        "errors": {"type": "array", "items": {"type": "string"}},
+        "computed_hash": {"oneOf": [{"$ref": "#/definitions/sha256_string"}, {"type": "null"}]},
+        "declared_hash": {"oneOf": [{"type": "string"}, {"type": "null"}]}
+      }
+    },
+    "raw_gate_report": {
+      "type": "object",
+      "required": ["run_id", "expected", "present", "empty", "hash_valid", "pass_gate", "scoring_status", "verdict", "records"],
+      "properties": {
+        "run_id": {"type": "string"},
+        "expected": {"type": "integer", "minimum": 0},
+        "present": {"type": "integer", "minimum": 0},
+        "empty": {"type": "integer", "minimum": 0},
+        "hash_valid": {"type": "integer", "minimum": 0},
+        "pass_gate": {"type": "boolean"},
+        "scoring_status": {"type": "string", "enum": ["READY", "DONE_LOCAL", "BLOCKED"]},
+        "verdict": {"type": "string"},
+        "records": {"type": "array", "items": {"$ref": "#/definitions/record_verdict"}}
+      }
+    },
+    "passport_validation": {
+      "type": "object",
+      "required": ["valid", "blockers"],
+      "properties": {
+        "valid": {"type": "boolean"},
+        "blockers": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "zip_audit": {
+      "type": "object",
+      "required": ["exists", "path"],
+      "properties": {
+        "exists": {"type": "boolean"},
+        "path": {"type": "string"},
+        "zip_sha256": {"oneOf": [{"$ref": "#/definitions/sha256_string"}, {"type": "null"}]},
+        "member_count": {"type": "integer", "minimum": 0},
+        "total_bytes": {"type": "integer", "minimum": 0},
+        "replay_pass": {"type": "boolean"},
+        "verdict": {"type": "string"},
+        "proof_status": {"type": "string"}
+      }
+    },
+    "csv_summary": {
+      "type": "object",
+      "required": ["path", "exists"],
+      "properties": {
+        "path": {"type": "string"},
+        "exists": {"type": "boolean"},
+        "rows": {"type": "integer", "minimum": 0},
+        "numeric_cells": {"type": "integer", "minimum": 0},
+        "non_numeric_cells": {"type": "integer", "minimum": 0},
+        "min": {"oneOf": [{"type": "number"}, {"type": "null"}]},
+        "max": {"oneOf": [{"type": "number"}, {"type": "null"}]},
+        "mean": {"oneOf": [{"type": "number"}, {"type": "null"}]},
+        "verdict": {"type": "string"}
+      }
+    }
+  },
+  "functions": {
+    "sha256_text": {
+      "input": {"text": {"type": "string"}},
+      "output": {"$ref": "#/definitions/sha256_string"}
+    },
+    "sha256_bytes": {
+      "input": {"data": {"type": "string", "description": "bytes (binary)"}},
+      "output": {"$ref": "#/definitions/sha256_string"}
+    },
+    "sha256_file": {
+      "input": {"path": {"type": "string", "description": "File system path"}},
+      "output": {"oneOf": [{"$ref": "#/definitions/sha256_string"}, {"type": "null"}]}
+    },
+    "canonical_json": {
+      "input": {"obj": {"description": "Any JSON-serializable object"}},
+      "output": {"type": "string", "description": "Deterministic JSON with sorted keys"}
+    },
+    "sha256_json": {
+      "input": {"obj": {"description": "Any JSON-serializable object"}},
+      "output": {"$ref": "#/definitions/sha256_string"}
+    },
+    "build_raw_record": {
+      "input": {
+        "run_id": {"type": "string"},
+        "task_id": {"type": "string"},
+        "output_id": {"type": "string"},
+        "model_slot": {"type": "string"},
+        "raw_output": {"type": "string"},
+        "token_count": {"type": "integer", "minimum": 0, "default": 0},
+        "latency_ms": {"type": "integer", "minimum": 0, "default": 0},
+        "timestamp": {"type": "string", "default": "1970-01-01T00:00:00Z"}
+      },
+      "output": {"$ref": "#/definitions/raw_record"}
+    },
+    "validate_raw_record": {
+      "input": {"record": {"$ref": "#/definitions/raw_record"}},
+      "output": {"$ref": "#/definitions/record_verdict"}
+    },
+    "validate_raw_records": {
+      "input": {
+        "run_id": {"type": "string"},
+        "expected": {"type": "integer", "minimum": 0},
+        "records": {"type": "array", "items": {"$ref": "#/definitions/raw_record"}},
+        "strict": {"type": "boolean", "default": true},
+        "scoring_done": {"type": "boolean", "default": false}
+      },
+      "output": {"$ref": "#/definitions/raw_gate_report"}
+    },
+    "load_jsonl": {
+      "input": {"path": {"type": "string", "description": "Path to JSONL file"}},
+      "output": {"type": "array", "items": {"type": "object"}}
+    },
+    "validate_metric_passport": {
+      "input": {
+        "obj": {"type": "object"},
+        "expect_cycle": {"oneOf": [{"type": "integer"}, {"type": "null"}], "default": null}
+      },
+      "output": {"$ref": "#/definitions/passport_validation"}
+    },
+    "audit_zip": {
+      "input": {
+        "path": {"type": "string", "description": "Path to ZIP file"},
+        "max_hash_mb": {"type": "number", "default": 64.0}
+      },
+      "output": {"$ref": "#/definitions/zip_audit"}
+    },
+    "summarize_csv": {
+      "input": {
+        "path": {"type": "string", "description": "Path to CSV file"},
+        "max_cells": {"type": "integer", "minimum": 1, "default": 5000000}
+      },
+      "output": {"$ref": "#/definitions/csv_summary"}
+    }
+  }
+}
