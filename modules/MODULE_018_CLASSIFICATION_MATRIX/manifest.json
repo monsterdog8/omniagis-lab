@@ -1,0 +1,39 @@
+{
+  "module_id": "MODULE_018_CLASSIFICATION_MATRIX",
+  "version": "1.0.0",
+  "source_file": "classification_matrix_schema_v1.json",
+  "description": "Schema template for real auditor data collection — 5 auditors (HUMAN_01, HUMAN_02, GPT, CLAUDE, GROK) × 8 claims (C01-C08) = 40 classifications. Defines label_schema (SUPPORTED/PARTIALLY_SUPPORTED/UNSUPPORTED/INSUFFICIENT_EVIDENCE), C08 gate threshold (Krippendorff alpha >= 0.667), and inter-rater reliability computation trigger.",
+  "function": "Schema template for real auditor data collection — 5 auditors × 8 claims = 40 classifications, C08 gate, Krippendorff alpha computation trigger",
+  "inputs": [
+    {"name": "classification_matrix_schema_v1.json", "type": "JSON file", "description": "Governance template — fill in classifications after owner confirms CANONICAL_v1"},
+    {"name": "auditor_id", "type": "str", "description": "One of: HUMAN_01, HUMAN_02, GPT, CLAUDE, GROK"},
+    {"name": "claim_id", "type": "str", "description": "One of C01-C08"},
+    {"name": "label", "type": "str", "description": "One of: SUPPORTED, PARTIALLY_SUPPORTED, UNSUPPORTED, INSUFFICIENT_EVIDENCE"},
+    {"name": "confidence", "type": "int", "description": "Integer in [0, 10]"},
+    {"name": "rationale_brief", "type": "str", "description": "Brief rationale text"}
+  ],
+  "outputs": [
+    {"name": "auditors", "type": "array", "description": "List of 5 auditor definitions (id, type, blind flag)"},
+    {"name": "label_schema", "type": "object", "description": "Valid label values, confidence range, required fields per classification entry"},
+    {"name": "classifications", "type": "array", "description": "40-row classification matrix (one per auditor × claim pair)"},
+    {"name": "computed_metrics", "type": "object", "description": "Placeholder for Krippendorff alpha, n_auditors, n_claims, inter_rater_verdict"},
+    {"name": "c08_gate", "type": "object", "description": "Gate thresholds: minimum=0.667, substantial=0.800"},
+    {"name": "pipeline_log", "type": "object", "description": "Audit trail timestamps for each pipeline phase"}
+  ],
+  "dependencies": {
+    "stdlib": ["json"],
+    "third_party": []
+  },
+  "public_api": [
+    {
+      "name": "classification_matrix_schema_v1.json",
+      "signature": "json.load(open('classification_matrix_schema_v1.json'))",
+      "returns": "dict",
+      "description": "Load and read the schema template. Fill in the 'classifications' array with one entry per (auditor × claim) pair. After all 40 entries are filled, compute Krippendorff alpha and evaluate the C08 gate."
+    }
+  ],
+  "status": "TEMPLATE__AWAITING_CANONICAL_PACKET",
+  "coverage": "N/A",
+  "tests": "tests/test_MODULE_018.py",
+  "claim_ceiling": "LOCAL_ONLY__NO_EXTERNAL_PROOF"
+}

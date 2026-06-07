@@ -1,0 +1,132 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CLASSIFICATION_MATRIX_SCHEMA_v1",
+  "description": "JSON schema for the classification matrix governance template",
+  "type": "object",
+  "required": [
+    "_schema", "_version", "_claim_ceiling", "_status",
+    "packet_reference", "auditors", "label_schema",
+    "classifications", "computed_metrics", "c08_gate", "pipeline_log"
+  ],
+  "properties": {
+    "_schema":        {"type": "string", "const": "CLASSIFICATION_MATRIX"},
+    "_version":       {"type": "string"},
+    "_claim_ceiling": {"type": "string"},
+    "_status":        {"type": "string"},
+    "packet_reference": {
+      "type": "object",
+      "required": ["packet_id", "packet_hash", "canonical"],
+      "properties": {
+        "packet_id":   {"type": "string"},
+        "packet_hash": {"type": "string", "minLength": 64, "maxLength": 64},
+        "canonical":   {"type": "boolean"},
+        "note":        {"type": "string"}
+      }
+    },
+    "auditors": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "required": ["auditor_id", "auditor_type", "blind"],
+        "properties": {
+          "auditor_id":      {"type": "string"},
+          "auditor_type":    {"type": "string", "enum": ["HUMAN", "AI"]},
+          "blind":           {"type": "boolean"},
+          "timestamp_start": {"type": ["string", "null"]},
+          "timestamp_end":   {"type": ["string", "null"]}
+        }
+      }
+    },
+    "label_schema": {
+      "type": "object",
+      "required": ["values", "confidence_range", "required_fields"],
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["SUPPORTED", "PARTIALLY_SUPPORTED", "UNSUPPORTED", "INSUFFICIENT_EVIDENCE"]
+          },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "confidence_range": {
+          "type": "array",
+          "items": {"type": "integer"},
+          "minItems": 2,
+          "maxItems": 2,
+          "description": "[min, max] confidence score"
+        },
+        "required_fields": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Required fields per classification entry"
+        }
+      }
+    },
+    "classifications": {
+      "type": "array",
+      "description": "One entry per (auditor × claim) pair. Total: 5 auditors × 8 claims = 40 entries.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "_note":         {"type": "string"},
+          "auditor_id":    {"type": ["string", "null"]},
+          "claim_id":      {"type": ["string", "null"]},
+          "claim_hash":    {"type": ["string", "null"]},
+          "label":         {
+            "oneOf": [
+              {"type": "null"},
+              {"type": "string", "enum": ["SUPPORTED", "PARTIALLY_SUPPORTED", "UNSUPPORTED", "INSUFFICIENT_EVIDENCE"]}
+            ]
+          },
+          "confidence":    {"type": ["integer", "null"], "minimum": 0, "maximum": 10},
+          "rationale_brief": {"type": ["string", "null"]},
+          "timestamp":     {"type": ["string", "null"]}
+        }
+      }
+    },
+    "computed_metrics": {
+      "type": "object",
+      "required": ["_status", "krippendorff_alpha"],
+      "properties": {
+        "_status":          {"type": "string"},
+        "krippendorff_alpha": {"type": ["number", "null"]},
+        "alpha_level":      {"type": ["string", "null"]},
+        "n_auditors":       {"type": ["integer", "null"]},
+        "n_claims":         {"type": ["integer", "null"]},
+        "n_classifications":{"type": ["integer", "null"]},
+        "inter_rater_verdict": {"type": ["string", "null"]},
+        "c08_gate_result":  {"type": ["string", "null"]}
+      }
+    },
+    "c08_gate": {
+      "type": "object",
+      "required": ["alpha_threshold_minimum", "alpha_threshold_substantial"],
+      "properties": {
+        "_description":           {"type": "string"},
+        "alpha_threshold_minimum":    {"type": "number", "const": 0.667},
+        "alpha_threshold_substantial":{"type": "number", "const": 0.800},
+        "result":                 {"type": ["string", "null"]},
+        "blocked_claims_on_fail": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      }
+    },
+    "pipeline_log": {
+      "type": "object",
+      "properties": {
+        "packet_confirmed":       {"type": ["string", "null"]},
+        "auditors_assigned":      {"type": ["string", "null"]},
+        "classifications_complete":{"type": ["string", "null"]},
+        "matrix_sealed":          {"type": ["string", "null"]},
+        "alpha_computed":         {"type": ["string", "null"]},
+        "c08_gate_evaluated":     {"type": ["string", "null"]},
+        "meta_audit_complete":    {"type": ["string", "null"]}
+      }
+    }
+  }
+}

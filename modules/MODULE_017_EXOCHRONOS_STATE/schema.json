@@ -1,0 +1,104 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "EXOCHRONOS_STATE_v1 Schema",
+  "description": "JSON schema for the EXOCHRONOS system state governance artifact",
+  "type": "object",
+  "required": [
+    "_schema", "_version", "_date", "_claim_ceiling",
+    "convergence", "component_status", "gap_assessment",
+    "repo_metrics", "packet", "owner_decision_point",
+    "next_phase", "axioms", "blocked_claims", "allowed_claims"
+  ],
+  "properties": {
+    "_schema":         {"type": "string", "const": "EXOCHRONOS_STATE"},
+    "_version":        {"type": "string"},
+    "_date":           {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$"},
+    "_claim_ceiling":  {"type": "string"},
+    "convergence": {
+      "type": "object",
+      "required": ["verdict", "independent_audits_agree_on_bottleneck", "convergence_on_bottleneck", "basis"],
+      "properties": {
+        "verdict":                             {"type": "string"},
+        "independent_audits_agree_on_bottleneck": {"type": "boolean"},
+        "convergence_on_bottleneck":           {"type": "string"},
+        "convergence_on_claims_validity":      {"type": "string"},
+        "basis":                               {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "component_status": {
+      "type": "object",
+      "required": [
+        "core_deterministic_framework", "governance_framework",
+        "promotion_engine", "krippendorff_engine",
+        "blindness_verifier", "replication_infrastructure",
+        "external_replication", "real_auditor_classifications"
+      ],
+      "additionalProperties": {"type": "string"}
+    },
+    "gap_assessment": {
+      "type": "object",
+      "required": ["technical_gap", "data_gap"],
+      "properties": {
+        "technical_gap": {"type": "string", "enum": ["LOW", "MEDIUM", "HIGH"]},
+        "data_gap":      {"type": "string", "enum": ["LOW", "MEDIUM", "HIGH"]}
+      }
+    },
+    "repo_metrics": {
+      "type": "object",
+      "required": ["coverage_omniagis", "coverage_gpts_core", "equivalence_tests", "equivalence_pass", "unexplained_deltas"],
+      "properties": {
+        "coverage_omniagis":       {"type": "string"},
+        "coverage_omniagis_tests": {"type": "integer"},
+        "coverage_gpts_core":      {"type": "string"},
+        "coverage_gpts_core_tests":{"type": "integer"},
+        "equivalence_tests":       {"type": "integer"},
+        "equivalence_pass":        {"type": "integer"},
+        "traceability_symbols":    {"type": "integer"},
+        "unexplained_deltas":      {"type": "integer"}
+      }
+    },
+    "packet": {
+      "type": "object",
+      "required": ["id", "packet_hash", "frozen", "canonical", "canonical_status"],
+      "properties": {
+        "id":                      {"type": "string"},
+        "packet_hash":             {"type": "string", "minLength": 64, "maxLength": 64},
+        "frozen":                  {"type": "boolean"},
+        "canonical":               {"type": "boolean"},
+        "requires_owner_confirmation": {"type": "boolean"},
+        "canonical_status":        {"type": "string"}
+      }
+    },
+    "owner_decision_point": {
+      "type": "object",
+      "required": ["option_a", "option_b", "decision_criterion", "rational_default"],
+      "additionalProperties": {"type": "string"}
+    },
+    "next_phase": {
+      "type": "object",
+      "required": ["gate", "next_artifact", "next_metric", "pipeline", "blocked_until"],
+      "properties": {
+        "gate":          {"type": "string"},
+        "next_artifact": {"type": "string"},
+        "next_metric":   {"type": "string"},
+        "pipeline":      {"type": "array", "items": {"type": "string"}},
+        "blocked_until": {"type": "string"}
+      }
+    },
+    "axioms": {
+      "type": "object",
+      "required": ["AX-01", "AX-02", "AX-03"],
+      "additionalProperties": {"type": "string"}
+    },
+    "blocked_claims": {
+      "type": "array",
+      "items": {"type": "string"},
+      "minItems": 1
+    },
+    "allowed_claims": {
+      "type": "array",
+      "items": {"type": "string"},
+      "minItems": 1
+    }
+  }
+}

@@ -1,0 +1,233 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "MODULE_012_SCORE_REPORT_schema",
+  "title": "MODULE_012_SCORE_REPORT Schema",
+  "description": "Input/output schema for MODULE_012_SCORE_REPORT (gpts_core/score_report.py)",
+  "definitions": {
+    "CanonicalValidation": {
+      "type": "object",
+      "required": ["passed", "missing_sections", "format_issues"],
+      "properties": {
+        "passed": {"type": "boolean"},
+        "missing_sections": {"type": "array", "items": {"type": "string"}},
+        "format_issues": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "ComponentScores": {
+      "type": "object",
+      "required": [
+        "global_and_subverdicts", "critical_points_coverage", "confidence_calibration",
+        "discriminant_tests", "probative_separation", "weakness_taxonomy",
+        "fail_closed_and_limitations"
+      ],
+      "properties": {
+        "global_and_subverdicts": {"type": "integer", "minimum": 0},
+        "critical_points_coverage": {"type": "integer", "minimum": 0},
+        "confidence_calibration": {"type": "integer", "minimum": 0},
+        "discriminant_tests": {"type": "integer", "minimum": 0},
+        "probative_separation": {"type": "integer", "minimum": 0},
+        "weakness_taxonomy": {"type": "integer", "minimum": 0},
+        "fail_closed_and_limitations": {"type": "integer", "minimum": 0}
+      }
+    },
+    "ConfidenceTolerance": {
+      "type": "object",
+      "properties": {
+        "full_score_if_abs_diff_lte": {"type": "number", "default": 0.5},
+        "light_penalty_if_abs_diff_lte": {"type": "number", "default": 1.0},
+        "medium_penalty_if_abs_diff_lte": {"type": "number", "default": 2.0}
+      }
+    },
+    "OracleDict": {
+      "type": "object",
+      "required": ["global_verdict", "confidence_score"],
+      "properties": {
+        "global_verdict": {
+          "type": "string",
+          "enum": ["SUPPORTED", "PARTIALLY SUPPORTED", "WEAKLY SUPPORTED", "UNSUPPORTED", "UNCERTAIN"]
+        },
+        "confidence_score": {"type": "number", "minimum": 0, "maximum": 10},
+        "sub_verdicts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "proposition": {"type": "string"},
+              "verdict": {"type": "string"}
+            }
+          }
+        },
+        "critical_points_required": {"type": "array", "items": {"type": "string"}},
+        "expected_min_discriminant_tests": {"type": "integer", "minimum": 0},
+        "expected_discriminant_tests": {"type": "array", "items": {"type": "string"}},
+        "fatal_errors": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "CaseDict": {
+      "type": "object",
+      "required": ["case_id", "title", "claim", "question", "dossier", "oracle", "scoring", "report_contract"],
+      "properties": {
+        "case_id": {"type": "string"},
+        "schema_version": {"type": "string"},
+        "title": {"type": "string"},
+        "claim": {"type": "string"},
+        "question": {"type": "string"},
+        "dossier": {"type": "string"},
+        "oracle": {"$ref": "#/definitions/OracleDict"},
+        "scoring": {
+          "type": "object",
+          "required": ["components"],
+          "properties": {
+            "components": {
+              "type": "object",
+              "description": "Component name to max_points mapping. Must sum to 100.",
+              "additionalProperties": {"type": "integer"}
+            },
+            "confidence_tolerance": {"$ref": "#/definitions/ConfidenceTolerance"},
+            "bonuses": {"type": "object"},
+            "maluses": {"type": "object"}
+          }
+        },
+        "report_contract": {
+          "type": "object",
+          "properties": {
+            "required_sections": {"type": "array", "items": {"type": "string"}},
+            "allowed_verdicts": {"type": "array", "items": {"type": "string"}},
+            "weakness_microsyntax": {
+              "type": "object",
+              "properties": {
+                "fields": {"type": "array", "items": {"type": "string"}}
+              }
+            }
+          }
+        },
+        "fatal_errors_policy": {
+          "type": "object",
+          "properties": {
+            "per_error_malus": {"type": "integer"},
+            "max_total_malus": {"type": "integer"}
+          }
+        }
+      }
+    },
+    "EvaluateResult": {
+      "type": "object",
+      "required": ["case_id", "canonical_validation", "scores", "total"],
+      "properties": {
+        "case_id": {"type": "string"},
+        "schema_version": {"type": "string"},
+        "canonical_validation": {"$ref": "#/definitions/CanonicalValidation"},
+        "scores": {"$ref": "#/definitions/ComponentScores"},
+        "bonus": {"type": "integer", "minimum": 0},
+        "malus": {"type": "integer", "minimum": 0},
+        "total": {"type": "integer", "minimum": 0},
+        "differences": {"type": "array", "items": {"type": "string"}},
+        "notes": {"type": "object"},
+        "details": {"type": "object"},
+        "claim_ceiling": {"type": "string"}
+      }
+    }
+  },
+  "type": "object",
+  "properties": {
+    "extract_sections_input": {
+      "type": "object",
+      "required": ["markdown"],
+      "properties": {
+        "markdown": {"type": "string"}
+      }
+    },
+    "extract_sections_output": {
+      "type": "object",
+      "additionalProperties": {"type": "string"}
+    },
+    "extract_verdict_input": {
+      "type": "object",
+      "required": ["text"],
+      "properties": {
+        "text": {"type": "string"},
+        "allowed_verdicts": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      }
+    },
+    "extract_verdict_output": {
+      "oneOf": [
+        {"type": "string"},
+        {"type": "null"}
+      ]
+    },
+    "extract_confidence_input": {
+      "type": "object",
+      "required": ["text"],
+      "properties": {
+        "text": {"type": "string"}
+      }
+    },
+    "extract_confidence_output": {
+      "oneOf": [
+        {"type": "number", "minimum": 0, "maximum": 10},
+        {"type": "null"}
+      ]
+    },
+    "score_fail_closed_input": {
+      "type": "object",
+      "required": ["report_sections"],
+      "properties": {
+        "report_sections": {
+          "type": "object",
+          "additionalProperties": {"type": "string"}
+        },
+        "max_points": {"type": "integer", "default": 10}
+      }
+    },
+    "score_fail_closed_output": {
+      "type": "array",
+      "prefixItems": [
+        {"type": "integer", "minimum": 0},
+        {"type": "string"}
+      ]
+    },
+    "validate_case_json_input": {
+      "type": "object",
+      "required": ["case"],
+      "properties": {
+        "case": {"$ref": "#/definitions/CaseDict"}
+      }
+    },
+    "validate_case_json_output": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "List of validation issues; empty if valid"
+    },
+    "evaluate_input": {
+      "type": "object",
+      "required": ["case", "report_text"],
+      "properties": {
+        "case": {"$ref": "#/definitions/CaseDict"},
+        "report_text": {"type": "string"},
+        "strict": {"type": "boolean", "default": false}
+      }
+    },
+    "evaluate_output": {
+      "$ref": "#/definitions/EvaluateResult"
+    },
+    "score_audit_report_input": {
+      "type": "object",
+      "required": ["report_text"],
+      "properties": {
+        "report_text": {"type": "string"},
+        "oracle": {
+          "oneOf": [
+            {"$ref": "#/definitions/OracleDict"},
+            {"type": "null"}
+          ]
+        }
+      }
+    },
+    "score_audit_report_output": {
+      "$ref": "#/definitions/EvaluateResult"
+    }
+  }
+}
