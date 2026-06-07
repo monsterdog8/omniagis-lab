@@ -1,0 +1,162 @@
+{
+  "module_id": "MODULE_012_SCORE_REPORT",
+  "version": "1.0.0",
+  "source_file": "gpts_core/score_report.py",
+  "description": "Scoring engine for canonical 7-section audit reports. Scores an AuditReport-formatted markdown text against a case JSON oracle on 7 components: verdict matching, critical-point coverage, confidence calibration, discriminant tests, probative separation, weakness taxonomy, and fail-closed discipline. All output scores are LOCAL_LAB_ONLY heuristics — not calibrated probabilities.",
+  "function": "7-component weighted audit report scoring engine (verdicts, coverage, confidence, discriminant tests, separation, taxonomy, fail-closed)",
+  "inputs": [
+    {"name": "report_text", "type": "str", "description": "Rendered markdown audit report"},
+    {"name": "case", "type": "Dict[str, Any]", "description": "Oracle case dict for evaluate()"},
+    {"name": "oracle", "type": "Optional[Dict[str, Any]]", "description": "Oracle dict for score_audit_report(); None uses auto-extracted oracle"},
+    {"name": "strict", "type": "bool", "description": "If True, return zero score when canonical validation fails"},
+    {"name": "markdown", "type": "str", "description": "Markdown text for extract_sections()"},
+    {"name": "text", "type": "str", "description": "Report text for extract_verdict() or extract_confidence()"},
+    {"name": "allowed_verdicts", "type": "List[str]", "description": "Allowed verdict strings for extract_verdict()"},
+    {"name": "report_sections", "type": "Dict[str, str]", "description": "Parsed sections dict for component scoring functions"},
+    {"name": "critical_points", "type": "List[str]", "description": "Required critical points for score_critical_points()"},
+    {"name": "actual", "type": "Optional[float]", "description": "Actual confidence score for score_confidence()"},
+    {"name": "expected", "type": "float", "description": "Expected confidence for score_confidence()"},
+    {"name": "tolerance", "type": "Dict[str, float]", "description": "Tolerance thresholds for score_confidence()"},
+    {"name": "required_fields", "type": "List[str]", "description": "Required weakness fields for score_weakness_taxonomy()"}
+  ],
+  "outputs": [
+    {"name": "normalize_text", "type": "str", "description": "Unicode-normalized, lowercased, whitespace-collapsed text"},
+    {"name": "extract_sections", "type": "Dict[str, str]", "description": "Section name to body text mapping"},
+    {"name": "extract_verdict", "type": "Optional[str]", "description": "Extracted verdict string or None"},
+    {"name": "extract_confidence", "type": "Optional[float]", "description": "Extracted confidence value (x/10) or None"},
+    {"name": "score_verdicts", "type": "Tuple[int, str, Dict]", "description": "Score, note, and details dict"},
+    {"name": "score_critical_points", "type": "Tuple[int, str, List[str]]", "description": "Score, note, and uncovered points list"},
+    {"name": "score_confidence", "type": "Tuple[int, str]", "description": "Score and note"},
+    {"name": "score_discriminant_tests", "type": "Tuple[int, str, int]", "description": "Score, note, and found test count"},
+    {"name": "score_probative_separation", "type": "Tuple[int, str]", "description": "Score and note"},
+    {"name": "score_weakness_taxonomy", "type": "Tuple[int, str]", "description": "Score and note"},
+    {"name": "score_fail_closed", "type": "Tuple[int, str]", "description": "Score and note"},
+    {"name": "validate_case_json", "type": "List[str]", "description": "List of validation issues (empty if valid)"},
+    {"name": "evaluate", "type": "Dict[str, Any]", "description": "Full evaluation result with component scores, total, differences"},
+    {"name": "score_audit_report", "type": "Dict[str, Any]", "description": "Score dict with total out of 100 and component breakdown"}
+  ],
+  "dependencies": {
+    "stdlib": ["re", "unicodedata", "dataclasses", "json", "pathlib"],
+    "third_party": []
+  },
+  "public_api": [
+    {
+      "name": "DEFAULT_ALLOWED_VERDICTS",
+      "signature": "DEFAULT_ALLOWED_VERDICTS: List[str]",
+      "returns": "List[str]",
+      "description": "Default allowed verdict strings (5 values)."
+    },
+    {
+      "name": "DEFAULT_REQUIRED_SECTIONS",
+      "signature": "DEFAULT_REQUIRED_SECTIONS: List[str]",
+      "returns": "List[str]",
+      "description": "Default 7 required section names."
+    },
+    {
+      "name": "DEFAULT_WEAKNESS_FIELDS",
+      "signature": "DEFAULT_WEAKNESS_FIELDS: List[str]",
+      "returns": "List[str]",
+      "description": "Default 5 required weakness micro-syntax fields."
+    },
+    {
+      "name": "CanonicalValidation",
+      "signature": "CanonicalValidation(passed, missing_sections, format_issues)",
+      "returns": "CanonicalValidation",
+      "description": "Dataclass holding canonical validation result."
+    },
+    {
+      "name": "ComponentScores",
+      "signature": "ComponentScores(global_and_subverdicts, critical_points_coverage, confidence_calibration, discriminant_tests, probative_separation, weakness_taxonomy, fail_closed_and_limitations)",
+      "returns": "ComponentScores",
+      "description": "Dataclass holding per-component integer scores."
+    },
+    {
+      "name": "normalize_text",
+      "signature": "normalize_text(s: str) -> str",
+      "returns": "str",
+      "description": "Unicode-normalize, lowercase, collapse whitespace."
+    },
+    {
+      "name": "extract_sections",
+      "signature": "extract_sections(markdown: str) -> Dict[str, str]",
+      "returns": "Dict[str, str]",
+      "description": "Parse markdown into section_name to body dict using heading detection."
+    },
+    {
+      "name": "extract_verdict",
+      "signature": "extract_verdict(text: str, allowed_verdicts: List[str] = DEFAULT_ALLOWED_VERDICTS) -> Optional[str]",
+      "returns": "Optional[str]",
+      "description": "Extract the global verdict from report text."
+    },
+    {
+      "name": "extract_confidence",
+      "signature": "extract_confidence(text: str) -> Optional[float]",
+      "returns": "Optional[float]",
+      "description": "Extract confidence score (x/10) from report text."
+    },
+    {
+      "name": "score_verdicts",
+      "signature": "score_verdicts(report_text, report_sections, oracle, allowed_verdicts, max_points=20) -> Tuple[int, str, Dict]",
+      "returns": "Tuple[int, str, Dict]",
+      "description": "Score global + sub-verdict matching against oracle."
+    },
+    {
+      "name": "score_critical_points",
+      "signature": "score_critical_points(report_text, critical_points, max_points=20) -> Tuple[int, str, List[str]]",
+      "returns": "Tuple[int, str, List[str]]",
+      "description": "Score coverage of required critical points."
+    },
+    {
+      "name": "score_confidence",
+      "signature": "score_confidence(actual, expected, tolerance, max_points=15) -> Tuple[int, str]",
+      "returns": "Tuple[int, str]",
+      "description": "Score confidence calibration against expected value with tolerance bands."
+    },
+    {
+      "name": "score_discriminant_tests",
+      "signature": "score_discriminant_tests(report_sections, oracle, max_points=15) -> Tuple[int, str, int]",
+      "returns": "Tuple[int, str, int]",
+      "description": "Count discriminant tests in Detailed Analysis section."
+    },
+    {
+      "name": "score_probative_separation",
+      "signature": "score_probative_separation(report_text, max_points=10) -> Tuple[int, str]",
+      "returns": "Tuple[int, str]",
+      "description": "Score presence of all 5 evidence channels (observation, theory, modeling, interpretation, inference)."
+    },
+    {
+      "name": "score_weakness_taxonomy",
+      "signature": "score_weakness_taxonomy(report_sections, required_fields=DEFAULT_WEAKNESS_FIELDS, max_points=10) -> Tuple[int, str]",
+      "returns": "Tuple[int, str]",
+      "description": "Score weakness micro-syntax completeness."
+    },
+    {
+      "name": "score_fail_closed",
+      "signature": "score_fail_closed(report_sections, max_points=10) -> Tuple[int, str]",
+      "returns": "Tuple[int, str]",
+      "description": "Score fail-closed discipline in Limitations and Summary sections."
+    },
+    {
+      "name": "validate_case_json",
+      "signature": "validate_case_json(case: Dict) -> List[str]",
+      "returns": "List[str]",
+      "description": "Validate required fields and scoring consistency in a case JSON."
+    },
+    {
+      "name": "evaluate",
+      "signature": "evaluate(case: Dict, report_text: str, strict: bool = False) -> Dict[str, Any]",
+      "returns": "Dict[str, Any]",
+      "description": "Evaluate a report markdown against a case JSON oracle. Returns full structured score dict."
+    },
+    {
+      "name": "score_audit_report",
+      "signature": "score_audit_report(report_text: str, oracle: Optional[Dict] = None) -> Dict[str, Any]",
+      "returns": "Dict[str, Any]",
+      "description": "Score a report text with a minimal default oracle (no sub-verdicts required). Returns score dict with total out of 100."
+    }
+  ],
+  "status": "PRODUCTION_CANDIDATE",
+  "coverage": "70%",
+  "tests": "tests/test_MODULE_012.py",
+  "claim_ceiling": "LOCAL_ONLY__NO_EXTERNAL_PROOF"
+}

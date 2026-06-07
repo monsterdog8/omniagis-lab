@@ -1,0 +1,38 @@
+{
+  "module_id": "MODULE_017_EXOCHRONOS_STATE",
+  "version": "1.0.0",
+  "source_file": "EXOCHRONOS_STATE_v1.json",
+  "description": "Official EXOCHRONOS system state snapshot (governance artifact). Records component readiness, gap assessment, packet status (C01-C08), owner decision point, and next-phase pipeline. All claims are LOCAL_ONLY — no external proof.",
+  "function": "Official EXOCHRONOS system state snapshot — component readiness, gap assessment, packet status, owner decision point",
+  "inputs": [
+    {"name": "EXOCHRONOS_STATE_v1.json", "type": "JSON file", "description": "Governance artifact — read-only state snapshot"}
+  ],
+  "outputs": [
+    {"name": "convergence", "type": "object", "description": "Convergence verdict and basis"},
+    {"name": "component_status", "type": "object", "description": "Readiness status of each system component"},
+    {"name": "gap_assessment", "type": "object", "description": "Technical and data gap levels"},
+    {"name": "repo_metrics", "type": "object", "description": "Coverage percentages, test counts, equivalence pass counts"},
+    {"name": "packet", "type": "object", "description": "Packet C01-C08 status, hash, canonical flag"},
+    {"name": "owner_decision_point", "type": "object", "description": "Option A vs B decision criteria"},
+    {"name": "next_phase", "type": "object", "description": "Next gate, artifact, metric, and pipeline steps"},
+    {"name": "axioms", "type": "object", "description": "AX-01 through AX-03 system axioms"},
+    {"name": "blocked_claims", "type": "array", "description": "Claims permanently blocked at current maturity"},
+    {"name": "allowed_claims", "type": "array", "description": "Claims allowed within scope with support status"}
+  ],
+  "dependencies": {
+    "stdlib": ["json"],
+    "third_party": []
+  },
+  "public_api": [
+    {
+      "name": "EXOCHRONOS_STATE_v1.json",
+      "signature": "json.load(open('EXOCHRONOS_STATE_v1.json'))",
+      "returns": "dict",
+      "description": "Load and read the state snapshot. Top-level keys: _schema, _version, _date, _claim_ceiling, convergence, component_status, gap_assessment, repo_metrics, packet, owner_decision_point, next_phase, axioms, blocked_claims, allowed_claims"
+    }
+  ],
+  "status": "ACTIVE",
+  "coverage": "N/A",
+  "tests": "tests/test_MODULE_017.py",
+  "claim_ceiling": "LOCAL_ONLY__NO_EXTERNAL_PROOF"
+}
