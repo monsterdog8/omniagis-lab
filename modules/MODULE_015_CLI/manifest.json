@@ -1,0 +1,54 @@
+{
+  "module_id": "MODULE_015_CLI",
+  "version": "1.0.0",
+  "source_file": "gpts_core/cli.py",
+  "description": "Unified 14-subcommand CLI for all gpts_core operations. Provides a single entry point (gpts-core) that dispatches to all modules: signal analysis, metric classification, record validation, claim classification, evidence scoring, ledger replay, SEAL audit, promotion, manifest building, adjudication, coherence passport, claim auditing, report scoring, and spectral gap.",
+  "function": "Unified 14-subcommand CLI for all gpts_core operations",
+  "inputs": [
+    {"name": "argv", "type": "list[str] | None", "description": "Command-line argument list passed to main(); None uses sys.argv"},
+    {"name": "subcommand", "type": "str", "description": "One of: analyze-signal, classify-metric, validate-records, classify-claim, evidence-score, replay-ledger, seal-audit, promote, build-manifest, adjudicate, coherence-passport, audit-claim, score-report, spectral-gap"},
+    {"name": "--pretty", "type": "flag", "description": "Pretty-print JSON output (2-space indent)"}
+  ],
+  "outputs": [
+    {"name": "exit_code", "type": "int", "description": "0 on success, 2 on error or gate failure, 1 on ledger/seal failure"},
+    {"name": "stdout", "type": "str", "description": "JSON output (or Markdown if --markdown) written to stdout"}
+  ],
+  "dependencies": {
+    "stdlib": ["argparse", "json", "sys", "pathlib", "csv"],
+    "third_party": ["gpts_core (all 15 other modules)", "numpy (spectral-gap subcommand only)"]
+  },
+  "public_api": [
+    {
+      "name": "build_parser",
+      "signature": "build_parser() -> argparse.ArgumentParser",
+      "returns": "argparse.ArgumentParser",
+      "description": "Build and return the full argument parser with all 14 subcommands registered."
+    },
+    {
+      "name": "main",
+      "signature": "main(argv: list[str] | None = None) -> int",
+      "returns": "int",
+      "description": "Parse argv (or sys.argv), dispatch to the appropriate subcommand handler, return exit code. Catches all exceptions and prints ERROR to stderr."
+    }
+  ],
+  "subcommands": [
+    {"name": "analyze-signal",     "description": "Compute structure metrics for a CSV signal column"},
+    {"name": "classify-metric",    "description": "Classify a metric row (name, value, context, row_type)"},
+    {"name": "validate-records",   "description": "Validate a JSONL file of raw output records"},
+    {"name": "classify-claim",     "description": "Classify a claim text as BLOCKED/BOUNDED/UNKNOWN"},
+    {"name": "evidence-score",     "description": "Compute evidence score from gate counts"},
+    {"name": "replay-ledger",      "description": "Replay a JSONL event ledger (hash chain check)"},
+    {"name": "seal-audit",         "description": "Validate SEAL continuity JSONL ledger"},
+    {"name": "promote",            "description": "Evaluate promotion candidates from CSV matrices"},
+    {"name": "build-manifest",     "description": "Build file manifest for a directory"},
+    {"name": "adjudicate",         "description": "Score a manual adjudication CSV"},
+    {"name": "coherence-passport", "description": "Build and validate a coherence passport"},
+    {"name": "audit-claim",        "description": "Audit a text claim against a corpus (7-section report)"},
+    {"name": "score-report",       "description": "Score a canonical audit report markdown"},
+    {"name": "spectral-gap",       "description": "Compute Ulam spectral gap over an alpha grid"}
+  ],
+  "status": "ACTIVE",
+  "coverage": "0%",
+  "tests": "tests/test_MODULE_015.py",
+  "claim_ceiling": "LOCAL_ONLY__NO_EXTERNAL_PROOF"
+}

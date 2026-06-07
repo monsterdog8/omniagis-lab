@@ -1,0 +1,47 @@
+{
+  "module_id": "MODULE_005_LEDGER",
+  "version": "1.0.0",
+  "source_file": "gpts_core/ledger.py",
+  "description": "Append-only SHA-256 chain audit log with thread-safe operations and a context citation lock. Supports hot (hash-only) and cold (chained) modes. ContextCitationLock enforces proof-of-citation: claimed values must appear verbatim in a corpus stream.",
+  "function": "SHA-256 chain append-only audit log, context citation lock",
+  "inputs": [
+    {"name": "path", "type": "Optional[Path]", "description": "File path for persistent JSONL ledger (None for in-memory)"},
+    {"name": "chained", "type": "bool", "description": "Enable chained hash mode (default False)"},
+    {"name": "gate", "type": "Optional[_SyncGate]", "description": "Pre-condition gate; defaults to all-ready gate"},
+    {"name": "guard_stable", "type": "bool", "description": "_SyncGate: guard stability flag (default True)"},
+    {"name": "experts_synced", "type": "bool", "description": "_SyncGate: experts sync flag (default True)"},
+    {"name": "rules_locked", "type": "bool", "description": "_SyncGate: rules lock flag (default True)"},
+    {"name": "context_frozen", "type": "bool", "description": "_SyncGate: context freeze flag (default True)"},
+    {"name": "event", "type": "str", "description": "Event name string for AuditLedger.log"},
+    {"name": "data", "type": "Any", "description": "Event payload data for AuditLedger.log"},
+    {"name": "audit", "type": "bool", "description": "If True, use chained mode for this entry (keyword-only)"},
+    {"name": "max_cache", "type": "int", "description": "Max cache size for ContextCitationLock (default 1024)"},
+    {"name": "corpus", "type": "Iterable[str]", "description": "Stream of text chunks to search for citations"},
+    {"name": "quoted_value", "type": "str", "description": "Value to search for in corpus (has_citation)"},
+    {"name": "claimed_value", "type": "Optional[str]", "description": "Value to require in corpus (require_citation)"},
+    {"name": "exact", "type": "bool", "description": "If True, use re.escape for exact match (default True)"}
+  ],
+  "outputs": [
+    {"name": "AuditLedger.log", "type": "Dict", "description": "Entry dict with event_hash (and prev_hash in chained mode)"},
+    {"name": "AuditLedger.entries", "type": "List[Dict]", "description": "All logged entries in order"},
+    {"name": "AuditLedger.verify_chain", "type": "Dict", "description": "Chain verification result with 'valid' bool"},
+    {"name": "ContextCitationLock.has_citation", "type": "bool", "description": "True if value found verbatim in corpus"},
+    {"name": "ContextCitationLock.require_citation", "type": "None", "description": "Raises ValueError if citation not found"}
+  ],
+  "dependencies": {
+    "hashlib": "stdlib",
+    "json": "stdlib",
+    "threading": "stdlib",
+    "pathlib": "stdlib",
+    "re": "stdlib"
+  },
+  "public_api": [
+    "_SyncGate",
+    "AuditLedger",
+    "ContextCitationLock"
+  ],
+  "status": "PRODUCTION_CANDIDATE",
+  "coverage": "64%",
+  "tests": "tests/test_MODULE_005.py",
+  "claim_ceiling": "LOCAL_ONLY__NO_EXTERNAL_PROOF"
+}

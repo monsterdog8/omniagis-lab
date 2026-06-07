@@ -1,0 +1,161 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MODULE_004_GATE API Schema",
+  "description": "Input/output contracts for the gate module public API",
+  "definitions": {
+    "claim_status_enum": {
+      "type": "string",
+      "enum": ["BLOCKED", "ALLOWED_BOUNDED", "UNKNOWN_REQUIRES_REVIEW"]
+    },
+    "claim_result": {
+      "type": "object",
+      "required": ["text", "status", "reason", "hits", "required_next_gate"],
+      "properties": {
+        "text": {"type": "string"},
+        "status": {"$ref": "#/definitions/claim_status_enum"},
+        "reason": {"type": "string"},
+        "hits": {"type": "array", "items": {"type": "string"}},
+        "required_next_gate": {"type": "string"}
+      }
+    },
+    "evidence_dimension_score": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 1.0
+    },
+    "evidence_input": {
+      "type": "object",
+      "properties": {
+        "DATA": {"$ref": "#/definitions/evidence_dimension_score"},
+        "RAW": {"$ref": "#/definitions/evidence_dimension_score"},
+        "SCORING": {"$ref": "#/definitions/evidence_dimension_score"},
+        "REPLAY": {"$ref": "#/definitions/evidence_dimension_score"},
+        "INDEPENDENCE": {"$ref": "#/definitions/evidence_dimension_score"},
+        "SAFETY": {"$ref": "#/definitions/evidence_dimension_score"},
+        "raw_expected": {"type": "integer", "minimum": 0},
+        "raw_valid": {"type": "integer", "minimum": 0},
+        "scoring_done": {"type": "boolean"},
+        "replay_available": {"type": "boolean"},
+        "independent_review": {"type": "boolean"},
+        "strong_public_claim": {"type": "boolean"}
+      }
+    },
+    "evidence_score": {
+      "type": "object",
+      "required": ["dimensions", "weighted_raw", "penalties", "final_score", "scoring_status", "public_claim_allowed", "verdict", "notes"],
+      "properties": {
+        "dimensions": {
+          "type": "object",
+          "properties": {
+            "DATA": {"$ref": "#/definitions/evidence_dimension_score"},
+            "RAW": {"$ref": "#/definitions/evidence_dimension_score"},
+            "SCORING": {"$ref": "#/definitions/evidence_dimension_score"},
+            "REPLAY": {"$ref": "#/definitions/evidence_dimension_score"},
+            "INDEPENDENCE": {"$ref": "#/definitions/evidence_dimension_score"},
+            "SAFETY": {"$ref": "#/definitions/evidence_dimension_score"}
+          }
+        },
+        "weighted_raw": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "penalties": {"type": "array", "items": {"type": "string"}},
+        "final_score": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "scoring_status": {
+          "type": "string",
+          "enum": ["READY_FOR_SCORING", "SCORING_DONE_LOCAL", "BLOCKED"]
+        },
+        "public_claim_allowed": {"type": "boolean"},
+        "verdict": {"type": "string"},
+        "notes": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "maturity_map_output": {
+      "type": "object",
+      "required": ["stages", "highest_maturity", "public_claim_right", "production_status"],
+      "properties": {
+        "stages": {
+          "type": "object",
+          "description": "Map of stage name -> bool"
+        },
+        "highest_maturity": {"type": "string"},
+        "public_claim_right": {"type": "string", "const": "BLOCKED"},
+        "production_status": {"type": "string", "const": "LOCKED"}
+      }
+    },
+    "proof_firewall_output": {
+      "type": "object",
+      "required": ["verdict", "reason", "missing"],
+      "properties": {
+        "verdict": {"type": "string"},
+        "reason": {"type": "string"},
+        "missing": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  },
+  "constants": {
+    "EVIDENCE_WEIGHTS": {
+      "type": "object",
+      "description": "Per-dimension weights for evidence scoring",
+      "properties": {
+        "DATA": {"type": "number", "const": 0.20},
+        "RAW": {"type": "number", "const": 0.20},
+        "SCORING": {"type": "number", "const": 0.20},
+        "REPLAY": {"type": "number", "const": 0.15},
+        "INDEPENDENCE": {"type": "number", "const": 0.15},
+        "SAFETY": {"type": "number", "const": 0.10}
+      }
+    },
+    "MATURITY_STAGES": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Ordered list of 8 maturity stages: IDEA, DESIGN, PROTOTYPE, RAW, SCORING, REPLAY, REVIEW, DEPLOY"
+    }
+  },
+  "functions": {
+    "classify_claim": {
+      "input": {
+        "text": {"type": "string"}
+      },
+      "output": {"$ref": "#/definitions/claim_result"}
+    },
+    "compute_evidence_score": {
+      "input": {
+        "inp": {"$ref": "#/definitions/evidence_input"}
+      },
+      "output": {"$ref": "#/definitions/evidence_score"}
+    },
+    "from_gate_counts": {
+      "input": {
+        "expected": {"type": "integer", "minimum": 0},
+        "present": {"type": "integer", "minimum": 0},
+        "valid": {"type": "integer", "minimum": 0},
+        "strict_sidecars": {"type": "integer", "minimum": 0, "default": 0},
+        "safety": {"type": "number", "minimum": 0.0, "maximum": 1.0, "default": 0.7},
+        "scoring": {"type": "boolean", "default": false},
+        "replay": {"type": "boolean", "default": false},
+        "independence": {"type": "boolean", "default": false},
+        "strong_public_claim": {"type": "boolean", "default": false}
+      },
+      "output": {"$ref": "#/definitions/evidence_input"}
+    },
+    "maturity_map": {
+      "input": {
+        "flags": {
+          "type": "object",
+          "description": "Keyword bool flags for each stage: idea, design, prototype, raw, scoring, replay, review, deploy"
+        }
+      },
+      "output": {"$ref": "#/definitions/maturity_map_output"}
+    },
+    "proof_firewall": {
+      "input": {
+        "dims": {
+          "oneOf": [
+            {"type": "object", "description": "Dict[str, float] of dimension scores"},
+            {"type": "null"}
+          ],
+          "default": null
+        }
+      },
+      "output": {"$ref": "#/definitions/proof_firewall_output"}
+    }
+  }
+}

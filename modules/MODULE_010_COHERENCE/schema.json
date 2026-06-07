@@ -1,0 +1,182 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "MODULE_010_COHERENCE_schema",
+  "title": "MODULE_010_COHERENCE Schema",
+  "description": "Input/output schema for MODULE_010_COHERENCE (gpts_core/coherence.py)",
+  "definitions": {
+    "ModuleObservations": {
+      "type": "object",
+      "description": "Map of module_id to list of numeric float samples (each list >= 2 values)",
+      "additionalProperties": {
+        "type": "array",
+        "items": {"type": "number"},
+        "minItems": 2
+      }
+    },
+    "MetricFields": {
+      "type": "object",
+      "required": ["module_ids", "entropy_by_module", "h_total", "mutual_information_matrix", "i_mutual", "global_coherence", "inter_variance"],
+      "properties": {
+        "module_ids": {"type": "array", "items": {"type": "string"}},
+        "raw_state_vector": {"type": "array", "items": {"type": "number"}},
+        "module_states": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "module_id": {"type": "string"},
+              "latest_state": {"type": "number"},
+              "sample_count": {"type": "integer"},
+              "sample_min": {"type": "number"},
+              "sample_max": {"type": "number"}
+            }
+          }
+        },
+        "entropy_by_module": {"type": "object", "additionalProperties": {"type": "number"}},
+        "total_entropy": {"type": "number"},
+        "h_total": {"type": "number"},
+        "mutual_information_matrix": {
+          "type": "array",
+          "items": {"type": "array", "items": {"type": "number"}}
+        },
+        "i_mutual": {"type": "number", "minimum": 0.0},
+        "global_coherence": {"type": "number", "minimum": 0.0},
+        "inter_variance": {"type": "number", "minimum": 0.0}
+      }
+    },
+    "CoherencePassport": {
+      "type": "object",
+      "required": ["passport_version", "cycle_id", "timestamp", "system_version", "source_status", "verdict"],
+      "properties": {
+        "passport_version": {"type": "string"},
+        "cycle_id": {},
+        "timestamp": {"type": "string"},
+        "system_version": {"type": "string"},
+        "source_status": {"type": "string"},
+        "lab_only": {"type": "boolean"},
+        "production_status": {"type": "string", "enum": ["LOCKED"]},
+        "public_proof": {"type": "string", "enum": ["NOT_GRANTED"]},
+        "raw_payload_hash": {"type": ["string", "null"]},
+        "entry_hash": {"type": ["string", "null"]},
+        "previous_hash": {"type": ["string", "null"]},
+        "replay_status": {"type": "string"},
+        "claim_status": {"type": "string"},
+        "verdict": {"type": "string"},
+        "blockers": {"type": "array", "items": {"type": "string"}},
+        "warnings": {"type": "array", "items": {"type": "string"}},
+        "i_mutual": {"type": ["number", "null"]},
+        "h_total": {"type": ["number", "null"]},
+        "global_coherence": {"type": ["number", "null"]}
+      }
+    },
+    "ValidationReport": {
+      "type": "object",
+      "required": ["verdict", "errors", "replay_status"],
+      "properties": {
+        "passport_version": {"type": ["string", "null"]},
+        "cycle_id": {},
+        "timestamp": {"type": "string"},
+        "lab_only": {"type": "boolean"},
+        "production_status": {"type": "string"},
+        "public_proof": {"type": "string"},
+        "errors": {"type": "array", "items": {"type": "string"}},
+        "warnings": {"type": "array", "items": {"type": "string"}},
+        "formula_verified": {"type": "boolean"},
+        "computed_global_coherence": {"type": ["number", "null"]},
+        "computed_raw_payload_hash": {"type": "string"},
+        "computed_entry_hash": {"type": "string"},
+        "replay_status": {"type": "string", "enum": ["PASS", "FAIL"]},
+        "claim_status": {"type": "string"},
+        "verdict": {"type": "string"},
+        "claim_ceiling": {"type": "string"}
+      }
+    }
+  },
+  "type": "object",
+  "properties": {
+    "shannon_entropy_input": {
+      "type": "object",
+      "required": ["discrete"],
+      "properties": {
+        "discrete": {"type": "array", "items": {"type": "integer"}}
+      }
+    },
+    "shannon_entropy_output": {
+      "type": "number",
+      "minimum": 0.0
+    },
+    "mutual_information_input": {
+      "type": "object",
+      "required": ["x", "y"],
+      "properties": {
+        "x": {"type": "array", "items": {"type": "integer"}},
+        "y": {"type": "array", "items": {"type": "integer"}}
+      }
+    },
+    "mutual_information_output": {
+      "type": "number",
+      "minimum": 0.0
+    },
+    "global_coherence_input": {
+      "type": "object",
+      "required": ["i_mutual", "h_total"],
+      "properties": {
+        "i_mutual": {"type": "number"},
+        "h_total": {"type": "number"}
+      }
+    },
+    "global_coherence_output": {
+      "type": "number",
+      "minimum": 0.0
+    },
+    "digitize_input": {
+      "type": "object",
+      "required": ["values"],
+      "properties": {
+        "values": {"type": "array", "items": {"type": "number"}},
+        "bins": {"type": "integer", "default": 8, "minimum": 1}
+      }
+    },
+    "digitize_output": {
+      "type": "array",
+      "items": {"type": "integer"}
+    },
+    "compute_metric_fields_input": {
+      "type": "object",
+      "required": ["observations"],
+      "properties": {
+        "observations": {"$ref": "#/definitions/ModuleObservations"},
+        "bins": {"type": "integer", "default": 8, "minimum": 1}
+      }
+    },
+    "compute_metric_fields_output": {
+      "$ref": "#/definitions/MetricFields"
+    },
+    "build_coherence_passport_input": {
+      "type": "object",
+      "required": ["cycle_id", "module_observations"],
+      "properties": {
+        "cycle_id": {"description": "Cycle identifier (string or integer)"},
+        "module_observations": {"$ref": "#/definitions/ModuleObservations"},
+        "system_version": {"type": "string", "default": "LOCAL_CAPTURE"},
+        "previous_hash": {"type": ["string", "null"]},
+        "bins": {"type": "integer", "default": 8},
+        "meta": {"type": ["object", "null"]}
+      }
+    },
+    "build_coherence_passport_output": {
+      "$ref": "#/definitions/CoherencePassport"
+    },
+    "validate_coherence_passport_input": {
+      "type": "object",
+      "required": ["passport"],
+      "properties": {
+        "passport": {"$ref": "#/definitions/CoherencePassport"},
+        "tolerance": {"type": "number", "default": 1e-9}
+      }
+    },
+    "validate_coherence_passport_output": {
+      "$ref": "#/definitions/ValidationReport"
+    }
+  }
+}

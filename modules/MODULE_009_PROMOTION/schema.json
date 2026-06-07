@@ -1,0 +1,131 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "MODULE_009_PROMOTION_schema",
+  "title": "MODULE_009_PROMOTION Schema",
+  "description": "Input/output schema for MODULE_009_PROMOTION (gpts_core/promotion.py)",
+  "definitions": {
+    "MatrixRow": {
+      "type": "object",
+      "description": "One row from a promotion matrix CSV",
+      "properties": {
+        "artifact_id": {"type": "string"},
+        "filename": {"type": "string"},
+        "verdict": {"type": "string"},
+        "claim_ceiling": {"type": "string"},
+        "provenance_chain": {"type": "string"},
+        "dependency_resolution_status": {"type": "string"},
+        "raw_ledger_presence": {"type": "string"},
+        "replay_status": {"type": "string"},
+        "next_gate": {"type": "string"},
+        "_source": {"type": "string", "description": "Source file path (injected by read_matrix_csv)"}
+      }
+    },
+    "EvaluatePromotionResult": {
+      "type": "object",
+      "required": ["global_verdict", "production_status", "rows_evaluated", "candidates", "blocker_count"],
+      "properties": {
+        "global_verdict": {
+          "type": "string",
+          "enum": [
+            "VERIFIED_CANDIDATES_PRESENT_REVIEW_REQUIRED",
+            "LOCKED_NO_VERIFIED_PROMOTION_CANDIDATE"
+          ]
+        },
+        "production_status": {"type": "string", "enum": ["LOCKED"]},
+        "rows_evaluated": {"type": "integer", "minimum": 0},
+        "candidates": {"type": "array", "items": {"$ref": "#/definitions/MatrixRow"}},
+        "blocker_count": {"type": "integer", "minimum": 0},
+        "blocker_reason_counts": {"type": "object", "additionalProperties": {"type": "integer"}},
+        "top_blockers": {"type": "array"}
+      }
+    },
+    "SealRecordResult": {
+      "type": "object",
+      "required": ["event_id", "valid", "errors"],
+      "properties": {
+        "event_id": {"type": "string"},
+        "artifact_path": {"type": "string"},
+        "valid": {"type": "boolean"},
+        "errors": {"type": "array", "items": {"type": "string"}},
+        "proof_scope": {"type": ["string", "null"]},
+        "claim_ceiling": {"type": ["string", "null"]}
+      }
+    },
+    "SealLedgerResult": {
+      "type": "object",
+      "required": ["ledger", "records", "pass_count", "fail_count", "all_valid"],
+      "properties": {
+        "ledger": {"type": "string"},
+        "records": {"type": "integer", "minimum": 0},
+        "pass_count": {"type": "integer", "minimum": 0},
+        "fail_count": {"type": "integer", "minimum": 0},
+        "all_valid": {"type": "boolean"},
+        "results": {"type": "array", "items": {"$ref": "#/definitions/SealRecordResult"}},
+        "claim_ceiling": {"type": "string"}
+      }
+    },
+    "ReplayResult": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": {"type": "string", "enum": ["PASS", "FAIL"]},
+        "path": {"type": "string"},
+        "events_count": {"type": "integer", "minimum": 0},
+        "latest_event_id": {"type": ["string", "null"]},
+        "reason": {"type": "string"},
+        "line": {"type": "integer"},
+        "missing": {"type": "array", "items": {"type": "string"}},
+        "claim_ceiling": {"type": "string"}
+      }
+    }
+  },
+  "type": "object",
+  "properties": {
+    "read_matrix_csv_input": {
+      "type": "object",
+      "required": ["path"],
+      "properties": {
+        "path": {"type": "string", "description": "Path to promotion matrix CSV file"}
+      }
+    },
+    "read_matrix_csv_output": {
+      "type": "array",
+      "items": {"$ref": "#/definitions/MatrixRow"}
+    },
+    "evaluate_promotion_input": {
+      "type": "object",
+      "required": ["paths"],
+      "properties": {
+        "paths": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "List of CSV matrix file paths"
+        }
+      }
+    },
+    "evaluate_promotion_output": {
+      "$ref": "#/definitions/EvaluatePromotionResult"
+    },
+    "validate_seal_ledger_input": {
+      "type": "object",
+      "required": ["ledger_path", "root"],
+      "properties": {
+        "ledger_path": {"type": "string", "description": "Path to JSONL seal ledger"},
+        "root": {"type": "string", "description": "Filesystem root for artifact path resolution"}
+      }
+    },
+    "validate_seal_ledger_output": {
+      "$ref": "#/definitions/SealLedgerResult"
+    },
+    "replay_jsonl_ledger_input": {
+      "type": "object",
+      "required": ["path"],
+      "properties": {
+        "path": {"type": "string", "description": "Path to JSONL event ledger"}
+      }
+    },
+    "replay_jsonl_ledger_output": {
+      "$ref": "#/definitions/ReplayResult"
+    }
+  }
+}

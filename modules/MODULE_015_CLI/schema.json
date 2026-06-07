@@ -1,0 +1,119 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MODULE_015_CLI API Schema",
+  "description": "Schema for the gpts-core CLI: subcommand arguments and output contracts",
+  "definitions": {
+    "exit_code": {
+      "type": "integer",
+      "enum": [0, 1, 2],
+      "description": "0=success, 1=ledger/seal failure, 2=error or gate failure"
+    }
+  },
+  "functions": {
+    "build_parser": {
+      "description": "Build and return the full argparse.ArgumentParser with all 14 subcommands",
+      "input": {},
+      "output": {
+        "type": "object",
+        "description": "argparse.ArgumentParser instance"
+      }
+    },
+    "main": {
+      "description": "Parse argv, dispatch to subcommand handler, return exit code",
+      "input": {
+        "argv": {
+          "oneOf": [
+            {"type": "array", "items": {"type": "string"}},
+            {"type": "null"}
+          ],
+          "description": "Argument list; null means use sys.argv"
+        }
+      },
+      "output": {"$ref": "#/definitions/exit_code"}
+    }
+  },
+  "subcommands": {
+    "analyze-signal": {
+      "args": {
+        "file":   {"type": "string", "description": "Path to CSV file"},
+        "column": {"type": "string", "default": "value"},
+        "sr":     {"type": "number", "default": 256.0}
+      },
+      "output": {"type": "object", "description": "Dict of structure metrics from signals.analyze()"}
+    },
+    "classify-metric": {
+      "args": {
+        "name":     {"type": "string"},
+        "value":    {"type": "string"},
+        "context":  {"type": "string", "default": ""},
+        "row_type": {"type": "string", "default": "metric"}
+      },
+      "output": {
+        "type": "object",
+        "required": ["label", "reasons", "confidence"],
+        "properties": {
+          "label":      {"type": "string"},
+          "reasons":    {"type": "array", "items": {"type": "string"}},
+          "confidence": {"type": "number"}
+        }
+      }
+    },
+    "validate-records": {
+      "args": {
+        "file":      {"type": "string"},
+        "expected":  {"type": "integer"},
+        "run_id":    {"type": "string", "default": ""},
+        "no_strict": {"type": "boolean", "default": false}
+      },
+      "output": {"type": "object", "description": "ValidationReport.to_dict()"}
+    },
+    "classify-claim": {
+      "args": {
+        "text": {"type": "string"}
+      },
+      "output": {
+        "type": "object",
+        "required": ["status"],
+        "properties": {
+          "status": {"type": "string", "enum": ["BLOCKED", "ALLOWED_BOUNDED", "UNKNOWN", "UNKNOWN_REQUIRES_REVIEW"]}
+        }
+      }
+    },
+    "evidence-score": {
+      "args": {
+        "expected":    {"type": "integer"},
+        "present":     {"type": "integer"},
+        "valid":       {"type": "integer"},
+        "sidecars":    {"type": "integer", "default": 0},
+        "safety":      {"type": "number", "default": 0.7},
+        "scoring":     {"type": "boolean", "default": false},
+        "replay":      {"type": "boolean", "default": false},
+        "independence":{"type": "boolean", "default": false}
+      },
+      "output": {"type": "object", "description": "EvidenceScore.to_dict()"}
+    },
+    "spectral-gap": {
+      "args": {
+        "alpha_min": {"type": "number", "default": 0.02},
+        "alpha_max": {"type": "number", "default": 0.20},
+        "n_alpha":   {"type": "integer", "default": 10},
+        "n_bins":    {"type": "integer", "default": 80},
+        "n_traj":    {"type": "integer", "default": 20000},
+        "seed":      {"type": "integer", "default": 42}
+      },
+      "output": {
+        "type": "object",
+        "required": ["alphas", "gaps", "regression", "claim_ceiling"],
+        "properties": {
+          "alphas":         {"type": "array", "items": {"type": "number"}},
+          "gaps":           {"type": "array", "items": {"type": ["number", "null"]}},
+          "kappa_fit":      {"type": ["number", "null"]},
+          "R2":             {"type": ["number", "null"]},
+          "qualificatif":   {"type": ["string", "null"]},
+          "regression_fail":{"type": ["string", "null"]},
+          "claim_ceiling":  {"type": "string"}
+        }
+      }
+    }
+  }
+}

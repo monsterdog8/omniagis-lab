@@ -1,0 +1,51 @@
+{
+  "module_id": "MODULE_004_GATE",
+  "version": "1.0.0",
+  "source_file": "gpts_core/gate.py",
+  "description": "Claim classification and evidence scoring. Classifies text claims as BLOCKED/ALLOWED_BOUNDED/UNKNOWN using regex pattern matching. Computes weighted evidence score with fail-closed penalties across six dimensions. Includes proof firewall and maturity stage tracking.",
+  "function": "Claim classification (BLOCKED/ALLOWED_BOUNDED/UNKNOWN), evidence scoring, proof firewall, maturity map",
+  "inputs": [
+    {"name": "text", "type": "str", "description": "Claim text to classify"},
+    {"name": "inp", "type": "EvidenceInput", "description": "Evidence dimension scores and flags for compute_evidence_score"},
+    {"name": "expected", "type": "int", "description": "Expected number of raw outputs for from_gate_counts"},
+    {"name": "present", "type": "int", "description": "Number of present raw outputs"},
+    {"name": "valid", "type": "int", "description": "Number of hash-valid outputs"},
+    {"name": "strict_sidecars", "type": "int", "description": "Number of strict sidecar outputs (default 0)"},
+    {"name": "safety", "type": "float", "description": "Safety dimension score [0,1] (default 0.7)"},
+    {"name": "scoring", "type": "bool", "description": "Whether scoring has been executed (default False)"},
+    {"name": "replay", "type": "bool", "description": "Whether replay is available (default False)"},
+    {"name": "independence", "type": "bool", "description": "Whether independent review has occurred (default False)"},
+    {"name": "strong_public_claim", "type": "bool", "description": "Whether a strong public claim is being made (default False)"},
+    {"name": "dims", "type": "Optional[Dict[str, float]]", "description": "Evidence dimension scores for proof_firewall"},
+    {"name": "flags", "type": "**bool", "description": "Stage flags for maturity_map (idea, design, prototype, raw, scoring, replay, review, deploy)"}
+  ],
+  "outputs": [
+    {"name": "classify_claim", "type": "ClaimResult", "description": "Claim classification dataclass"},
+    {"name": "compute_evidence_score", "type": "EvidenceScore", "description": "Weighted evidence score dataclass"},
+    {"name": "from_gate_counts", "type": "EvidenceInput", "description": "EvidenceInput constructed from gate counts"},
+    {"name": "maturity_map", "type": "Dict", "description": "Maturity stage tracking dict"},
+    {"name": "proof_firewall", "type": "Dict", "description": "Final public-claim gate result dict"}
+  ],
+  "dependencies": {
+    "dataclasses": "stdlib",
+    "enum": "stdlib",
+    "re": "stdlib"
+  },
+  "public_api": [
+    "ClaimStatus",
+    "ClaimResult",
+    "classify_claim",
+    "EVIDENCE_WEIGHTS",
+    "MATURITY_STAGES",
+    "EvidenceInput",
+    "EvidenceScore",
+    "compute_evidence_score",
+    "from_gate_counts",
+    "maturity_map",
+    "proof_firewall"
+  ],
+  "status": "PRODUCTION_CANDIDATE",
+  "coverage": "91%",
+  "tests": "tests/test_MODULE_004.py",
+  "claim_ceiling": "LOCAL_ONLY__NO_EXTERNAL_PROOF"
+}

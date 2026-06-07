@@ -1,0 +1,130 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MODULE_006_ADJUDICATION API Schema",
+  "description": "Input/output contracts for the adjudication module public API",
+  "definitions": {
+    "label_enum": {
+      "type": "string",
+      "enum": ["observed", "computed", "reported", "simulated", "symbolic", "unsupported"]
+    },
+    "adjudication_row": {
+      "type": "object",
+      "properties": {
+        "label": {"type": "string", "description": "Classifier predicted label"},
+        "human_label": {"type": "string", "description": "Human ground-truth label"},
+        "value_verified": {"type": "string"},
+        "source_verified": {"type": "string"},
+        "replay_status": {"type": "string"}
+      }
+    },
+    "label_score": {
+      "type": "object",
+      "required": ["label", "sampled_predicted", "true_positive", "human_total", "precision", "recall"],
+      "properties": {
+        "label": {"$ref": "#/definitions/label_enum"},
+        "sampled_predicted": {"type": "integer", "minimum": 0},
+        "true_positive": {"type": "integer", "minimum": 0},
+        "human_total": {"type": "integer", "minimum": 0},
+        "precision": {"oneOf": [{"type": "number", "minimum": 0.0, "maximum": 1.0}, {"type": "null"}]},
+        "recall": {"oneOf": [{"type": "number", "minimum": 0.0, "maximum": 1.0}, {"type": "null"}]}
+      }
+    },
+    "adjudication_result": {
+      "type": "object",
+      "required": ["generated_utc", "rows_total", "rows_completed", "completion_rate",
+                   "per_label", "verdict", "production_status"],
+      "properties": {
+        "generated_utc": {"type": "string"},
+        "rows_total": {"type": "integer", "minimum": 0},
+        "rows_completed": {"type": "integer", "minimum": 0},
+        "completion_rate": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "per_label": {
+          "type": "object",
+          "additionalProperties": {"$ref": "#/definitions/label_score"}
+        },
+        "value_verified_counts": {"type": "object", "additionalProperties": {"type": "integer"}},
+        "source_verified_counts": {"type": "object", "additionalProperties": {"type": "integer"}},
+        "replay_status_counts": {"type": "object", "additionalProperties": {"type": "integer"}},
+        "score": {"oneOf": [{"type": "number"}, {"type": "null"}]},
+        "production_status": {"type": "string", "const": "LOCKED"},
+        "verdict": {"type": "string", "const": "ADJUDICATION_SCORED_LOCAL_ONLY"}
+      }
+    }
+  },
+  "constants": {
+    "LABELS": {
+      "type": "array",
+      "items": {"$ref": "#/definitions/label_enum"},
+      "minItems": 6,
+      "maxItems": 6
+    },
+    "EXTRA_LABELS": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Additional label columns tracked in confusion matrix: invalid_parse, not_a_metric"
+    }
+  },
+  "functions": {
+    "build_confusion_matrix": {
+      "input": {
+        "rows": {"type": "array", "items": {"$ref": "#/definitions/adjudication_row"}},
+        "pred_field": {"type": "string", "default": "label"},
+        "human_field": {"type": "string", "default": "human_label"}
+      },
+      "output": {
+        "type": "object",
+        "description": "Dict[predicted_label, Counter[human_label]]",
+        "additionalProperties": {"type": "object"}
+      }
+    },
+    "score_label": {
+      "input": {
+        "matrix": {
+          "type": "object",
+          "description": "Confusion matrix from build_confusion_matrix"
+        },
+        "label": {"$ref": "#/definitions/label_enum"}
+      },
+      "output": {"$ref": "#/definitions/label_score"}
+    },
+    "score_adjudication": {
+      "input": {
+        "rows": {"type": "array", "items": {"$ref": "#/definitions/adjudication_row"}},
+        "labels": {
+          "type": "array",
+          "items": {"type": "string"},
+          "default": ["observed", "computed", "reported", "simulated", "symbolic", "unsupported"]
+        },
+        "pred_field": {"type": "string", "default": "label"},
+        "human_field": {"type": "string", "default": "human_label"}
+      },
+      "output": {"$ref": "#/definitions/adjudication_result"}
+    },
+    "read_adjudication_csv": {
+      "input": {
+        "path": {"type": "string", "description": "Path to adjudication CSV file"}
+      },
+      "output": {
+        "type": "array",
+        "items": {"$ref": "#/definitions/adjudication_row"}
+      }
+    },
+    "write_confusion_matrix_csv": {
+      "input": {
+        "path": {"type": "string", "description": "Output CSV path"},
+        "matrix": {"type": "object", "description": "Confusion matrix from build_confusion_matrix"},
+        "labels": {
+          "type": "array",
+          "items": {"type": "string"},
+          "default": ["observed", "computed", "reported", "simulated", "symbolic", "unsupported"]
+        },
+        "extra": {
+          "type": "array",
+          "items": {"type": "string"},
+          "default": ["invalid_parse", "not_a_metric"]
+        }
+      },
+      "output": {"type": "null"}
+    }
+  }
+}

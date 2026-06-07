@@ -1,0 +1,106 @@
+{
+  "module_id": "MODULE_010_COHERENCE",
+  "version": "1.0.0",
+  "source_file": "gpts_core/coherence.py",
+  "description": "Coherence metrics: Shannon entropy, mutual information, and replayable coherence passports. Computes module-level entropy, joint entropy, and mutual information from discretized numeric observations. Builds and validates coherence passports with SHA-256 hash chains. All claims: LOCAL_LAB_ONLY — not external proof.",
+  "function": "Information theory (entropy, MI), coherence passport building and validation",
+  "inputs": [
+    {"name": "discrete", "type": "Sequence[int]", "description": "Sequence of discrete symbol indices for shannon_entropy"},
+    {"name": "x", "type": "Sequence[int]", "description": "First discrete sequence for joint_entropy or mutual_information"},
+    {"name": "y", "type": "Sequence[int]", "description": "Second discrete sequence for joint_entropy or mutual_information"},
+    {"name": "i_mutual", "type": "float", "description": "Mutual information value for global_coherence"},
+    {"name": "h_total", "type": "float", "description": "Total entropy for global_coherence"},
+    {"name": "values", "type": "Sequence[float]", "description": "Continuous values to digitize"},
+    {"name": "bins", "type": "int", "description": "Number of discretization bins (default: 8)"},
+    {"name": "observations", "type": "Dict[str, List[float]]", "description": "Module observations for compute_metric_fields"},
+    {"name": "module_observations", "type": "Any", "description": "Raw module observations for normalize_observations or build_coherence_passport"},
+    {"name": "cycle_id", "type": "Any", "description": "Cycle identifier for build_coherence_passport"},
+    {"name": "system_version", "type": "str", "description": "System version string (default: 'LOCAL_CAPTURE')"},
+    {"name": "previous_hash", "type": "Optional[str]", "description": "Hash of previous passport for chain linkage"},
+    {"name": "meta", "type": "Optional[Dict[str, Any]]", "description": "Additional metadata fields for passport"},
+    {"name": "passport", "type": "Dict", "description": "Coherence passport dict for seal_passport_hashes or validate_coherence_passport"},
+    {"name": "tolerance", "type": "float", "description": "Floating point tolerance for formula verification (default: 1e-9)"}
+  ],
+  "outputs": [
+    {"name": "shannon_entropy", "type": "float", "description": "Shannon entropy H(X) in bits"},
+    {"name": "joint_entropy", "type": "float", "description": "Joint entropy H(X,Y) in bits"},
+    {"name": "mutual_information", "type": "float", "description": "Mutual information I(X;Y) clipped to [0, inf)"},
+    {"name": "global_coherence", "type": "float", "description": "C(S) = I_mutual(S) / H_total(S), 0 if h_total=0"},
+    {"name": "digitize", "type": "List[int]", "description": "Discrete integer indices in [0, bins-1]"},
+    {"name": "compute_metric_fields", "type": "Dict[str, Any]", "description": "Entropy, MI matrix, coherence, inter-variance fields"},
+    {"name": "normalize_observations", "type": "Tuple[Dict, List[str], List[str]]", "description": "Normalized dict, blockers list, warnings list"},
+    {"name": "build_coherence_passport", "type": "Dict", "description": "Coherence passport with all metric fields and status"},
+    {"name": "seal_passport_hashes", "type": "Dict", "description": "Passport copy with raw_payload_hash and entry_hash filled"},
+    {"name": "validate_coherence_passport", "type": "Dict", "description": "Validation report with verdict, errors, and replay status"}
+  ],
+  "dependencies": {
+    "stdlib": ["math", "hashlib", "json", "copy", "datetime"],
+    "third_party": []
+  },
+  "public_api": [
+    {
+      "name": "shannon_entropy",
+      "signature": "shannon_entropy(discrete: Sequence[int]) -> float",
+      "returns": "float",
+      "description": "Shannon entropy H(X) in bits from a sequence of discrete symbols."
+    },
+    {
+      "name": "joint_entropy",
+      "signature": "joint_entropy(x: Sequence[int], y: Sequence[int]) -> float",
+      "returns": "float",
+      "description": "Joint entropy H(X,Y) in bits."
+    },
+    {
+      "name": "mutual_information",
+      "signature": "mutual_information(x: Sequence[int], y: Sequence[int]) -> float",
+      "returns": "float",
+      "description": "Mutual information I(X;Y) = H(X) + H(Y) - H(X,Y), clipped to [0, inf)."
+    },
+    {
+      "name": "global_coherence",
+      "signature": "global_coherence(i_mutual: float, h_total: float) -> float",
+      "returns": "float",
+      "description": "C(S) = I_mutual(S) / H_total(S); returns 0 if h_total == 0."
+    },
+    {
+      "name": "digitize",
+      "signature": "digitize(values: Sequence[float], bins: int = 8) -> List[int]",
+      "returns": "List[int]",
+      "description": "Bin continuous values into discrete integer indices in [0, bins-1]."
+    },
+    {
+      "name": "compute_metric_fields",
+      "signature": "compute_metric_fields(observations: Dict[str, List[float]], bins: int = 8) -> Dict[str, Any]",
+      "returns": "Dict[str, Any]",
+      "description": "Compute entropy, mutual information matrix, and global coherence from module observations."
+    },
+    {
+      "name": "normalize_observations",
+      "signature": "normalize_observations(module_observations: Any) -> Tuple[Dict, List[str], List[str]]",
+      "returns": "Tuple[Dict, List[str], List[str]]",
+      "description": "Validate and normalize module_observations into float lists. Returns (normalized_dict, blockers, warnings)."
+    },
+    {
+      "name": "build_coherence_passport",
+      "signature": "build_coherence_passport(cycle_id, module_observations, *, system_version='LOCAL_CAPTURE', previous_hash=None, bins=8, meta=None) -> Dict",
+      "returns": "Dict",
+      "description": "Build a coherence passport from raw module observations. Hashes are unsealed; call seal_passport_hashes() before replay."
+    },
+    {
+      "name": "seal_passport_hashes",
+      "signature": "seal_passport_hashes(passport: Dict) -> Dict",
+      "returns": "Dict",
+      "description": "Fill raw_payload_hash and entry_hash in a passport copy."
+    },
+    {
+      "name": "validate_coherence_passport",
+      "signature": "validate_coherence_passport(passport: Dict, *, tolerance: float = 1e-9) -> Dict",
+      "returns": "Dict",
+      "description": "Validate a sealed coherence passport. Returns a report dict with verdict, errors, and replay status."
+    }
+  ],
+  "status": "PRODUCTION_CANDIDATE",
+  "coverage": "78%",
+  "tests": "tests/test_MODULE_010.py",
+  "claim_ceiling": "LOCAL_ONLY__NO_EXTERNAL_PROOF"
+}

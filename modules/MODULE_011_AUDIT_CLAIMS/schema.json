@@ -1,0 +1,184 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "MODULE_011_AUDIT_CLAIMS_schema",
+  "title": "MODULE_011_AUDIT_CLAIMS Schema",
+  "description": "Input/output schema for MODULE_011_AUDIT_CLAIMS (gpts_core/audit_claims.py)",
+  "definitions": {
+    "SourceRecord": {
+      "type": "object",
+      "required": ["label", "source_type", "stable"],
+      "properties": {
+        "label": {"type": "string"},
+        "path": {"type": ["string", "null"]},
+        "source_type": {"type": "string", "enum": ["artifact", "conversation", "derived"]},
+        "stable": {"type": "boolean"},
+        "excerpt": {"type": ["string", "null"]}
+      }
+    },
+    "EvidenceSlice": {
+      "type": "object",
+      "required": ["source_label", "channel", "text", "score"],
+      "properties": {
+        "source_label": {"type": "string"},
+        "channel": {
+          "type": "string",
+          "enum": ["observation", "theory", "modeling", "interpretation", "inference"]
+        },
+        "text": {"type": "string"},
+        "score": {"type": "number", "minimum": 0.0, "maximum": 1.0}
+      }
+    },
+    "Weakness": {
+      "type": "object",
+      "required": ["type", "status", "severity", "probable_cause", "discriminant_test"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["Logical Contradiction", "Observational Tension", "Assumption Dependence", "Explanatory Limit"]
+        },
+        "status": {"type": "string", "enum": ["Established", "Contested", "Speculative"]},
+        "severity": {"type": "string", "enum": ["High", "Medium", "Low"]},
+        "probable_cause": {
+          "type": "string",
+          "enum": ["Data", "Measurement", "Modeling", "Parameters", "New Physics"]
+        },
+        "discriminant_test": {"type": "string", "minLength": 1},
+        "basis": {"type": ["string", "null"]}
+      }
+    },
+    "PropositionAssessment": {
+      "type": "object",
+      "required": ["proposition", "support_score", "status"],
+      "properties": {
+        "proposition": {"type": "string"},
+        "support_score": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "status": {"type": "string", "enum": ["supported", "mixed", "unsupported"]},
+        "supporting": {"type": "array", "items": {"type": "string"}},
+        "opposing": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "AuditReport": {
+      "type": "object",
+      "required": ["title", "reformulated_question", "verdict", "confidence"],
+      "properties": {
+        "title": {"type": "string"},
+        "reformulated_question": {"type": "string"},
+        "verdict": {
+          "type": "string",
+          "enum": ["SUPPORTED", "PARTIALLY SUPPORTED", "WEAKLY SUPPORTED", "UNSUPPORTED", "UNCERTAIN"]
+        },
+        "confidence": {"type": "number", "minimum": 0.0, "maximum": 10.0},
+        "one_sentence_justification": {"type": "string"},
+        "propositions": {"type": "array", "items": {"type": "string"}},
+        "supporting_arguments": {"type": "array", "items": {"type": "string"}},
+        "opposing_arguments": {"type": "array", "items": {"type": "string"}},
+        "weaknesses": {"type": "array", "items": {"$ref": "#/definitions/Weakness"}},
+        "internal_logical_contradictions": {"type": "string"},
+        "tensions_with_observations": {"type": "string"},
+        "assumption_dependence": {"type": "string"},
+        "explanatory_limits": {"type": "string"},
+        "limitations": {"type": "array", "items": {"type": "string"}},
+        "recommendations_tests": {"type": "array", "items": {"type": "string"}},
+        "recommendations_alternatives": {"type": "array", "items": {"type": "string"}},
+        "recommendations_next_questions": {"type": "array", "items": {"type": "string"}},
+        "sources": {"type": "array", "items": {"$ref": "#/definitions/SourceRecord"}},
+        "claim_ceiling": {"type": "string"}
+      }
+    },
+    "BatchAuditResult": {
+      "type": "object",
+      "required": ["n_claims", "rows"],
+      "properties": {
+        "n_claims": {"type": "integer", "minimum": 0},
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": {"type": "string"},
+              "claim": {"type": "string"},
+              "verdict": {"type": "string"},
+              "confidence": {"type": "number"},
+              "weakness_count": {"type": "integer"}
+            }
+          }
+        },
+        "verdict_distribution": {"type": "object", "additionalProperties": {"type": "integer"}},
+        "confidence_mean": {"type": ["number", "null"]},
+        "confidence_stdev": {"type": "number"},
+        "claim_ceiling": {"type": "string"},
+        "note": {"type": "string"}
+      }
+    }
+  },
+  "type": "object",
+  "properties": {
+    "audit_claim_input": {
+      "type": "object",
+      "required": ["claim", "title"],
+      "properties": {
+        "claim": {"type": "string", "minLength": 1},
+        "title": {"type": "string"},
+        "inputs": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "File or directory paths to load as corpus"
+        },
+        "add_conversation_source": {"type": "boolean", "default": false}
+      }
+    },
+    "audit_claim_output": {
+      "$ref": "#/definitions/AuditReport"
+    },
+    "decompose_claim_input": {
+      "type": "object",
+      "required": ["claim"],
+      "properties": {
+        "claim": {"type": "string"}
+      }
+    },
+    "decompose_claim_output": {
+      "type": "array",
+      "items": {"type": "string"},
+      "minItems": 1
+    },
+    "validate_canonical_report_input": {
+      "type": "object",
+      "required": ["report_text"],
+      "properties": {
+        "report_text": {"type": "string"}
+      }
+    },
+    "validate_canonical_report_output": {
+      "type": "array",
+      "prefixItems": [
+        {"type": "boolean", "description": "True if all sections present"},
+        {"type": "array", "items": {"type": "string"}, "description": "List of missing sections/fields"}
+      ]
+    },
+    "batch_audit_input": {
+      "type": "object",
+      "required": ["claims"],
+      "properties": {
+        "claims": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["claim"],
+            "properties": {
+              "title": {"type": "string"},
+              "claim": {"type": "string"}
+            }
+          }
+        },
+        "inputs": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      }
+    },
+    "batch_audit_output": {
+      "$ref": "#/definitions/BatchAuditResult"
+    }
+  }
+}

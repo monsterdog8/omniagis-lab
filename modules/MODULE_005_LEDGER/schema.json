@@ -1,0 +1,123 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MODULE_005_LEDGER API Schema",
+  "description": "Input/output contracts for the ledger module public API",
+  "definitions": {
+    "sha256_string": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "ledger_entry": {
+      "type": "object",
+      "required": ["event", "timestamp", "entry_hash"],
+      "properties": {
+        "event": {"type": "string"},
+        "data": {},
+        "timestamp": {"type": "string", "description": "ISO-8601 UTC timestamp"},
+        "entry_hash": {"$ref": "#/definitions/sha256_string"},
+        "prev_hash": {
+          "$ref": "#/definitions/sha256_string",
+          "description": "Only present in chained mode"
+        }
+      }
+    },
+    "chain_verify_result": {
+      "type": "object",
+      "required": ["valid"],
+      "properties": {
+        "valid": {"type": "boolean"},
+        "entries_checked": {"type": "integer", "minimum": 0},
+        "note": {"type": "string"},
+        "first_error": {"type": "integer"},
+        "reason": {"type": "string"}
+      }
+    },
+    "sync_gate_input": {
+      "type": "object",
+      "properties": {
+        "guard_stable": {"type": "boolean", "default": true},
+        "experts_synced": {"type": "boolean", "default": true},
+        "rules_locked": {"type": "boolean", "default": true},
+        "context_frozen": {"type": "boolean", "default": true}
+      }
+    }
+  },
+  "classes": {
+    "_SyncGate": {
+      "description": "Lightweight pre-condition checker before ledger accepts events",
+      "constructor": {"$ref": "#/definitions/sync_gate_input"},
+      "methods": {
+        "ready": {
+          "input": {},
+          "output": {
+            "type": "boolean",
+            "description": "True if all four flags were True at construction"
+          }
+        }
+      }
+    },
+    "AuditLedger": {
+      "description": "Thread-safe append-only audit ledger with optional SHA-256 chain",
+      "constructor": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "oneOf": [{"type": "string"}, {"type": "null"}],
+            "default": null,
+            "description": "Path to JSONL file for persistence"
+          },
+          "chained": {"type": "boolean", "default": false},
+          "gate": {"description": "_SyncGate instance or null for default all-ready gate"}
+        }
+      },
+      "methods": {
+        "log": {
+          "input": {
+            "event": {"type": "string"},
+            "data": {"description": "Any JSON-serializable payload"},
+            "audit": {"type": "boolean", "default": false, "description": "keyword-only"}
+          },
+          "output": {"$ref": "#/definitions/ledger_entry"}
+        },
+        "entries": {
+          "input": {},
+          "output": {
+            "type": "array",
+            "items": {"$ref": "#/definitions/ledger_entry"}
+          }
+        },
+        "verify_chain": {
+          "input": {},
+          "output": {"$ref": "#/definitions/chain_verify_result"}
+        }
+      }
+    },
+    "ContextCitationLock": {
+      "description": "Proof-of-citation enforcer for long-context streaming corpora",
+      "constructor": {
+        "type": "object",
+        "properties": {
+          "max_cache": {"type": "integer", "minimum": 1, "default": 1024}
+        }
+      },
+      "methods": {
+        "has_citation": {
+          "input": {
+            "corpus": {"type": "array", "items": {"type": "string"}, "description": "Iterable[str] stream"},
+            "quoted_value": {"type": "string"},
+            "exact": {"type": "boolean", "default": true}
+          },
+          "output": {"type": "boolean"}
+        },
+        "require_citation": {
+          "input": {
+            "corpus": {"type": "array", "items": {"type": "string"}, "description": "Iterable[str] stream"},
+            "claimed_value": {"oneOf": [{"type": "string"}, {"type": "null"}]},
+            "exact": {"type": "boolean", "default": true}
+          },
+          "output": {"type": "null", "description": "Returns None on success; raises ValueError on failure"}
+        }
+      }
+    }
+  }
+}

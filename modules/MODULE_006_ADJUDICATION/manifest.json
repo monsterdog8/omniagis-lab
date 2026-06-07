@@ -1,0 +1,42 @@
+{
+  "module_id": "MODULE_006_ADJUDICATION",
+  "version": "1.0.0",
+  "source_file": "gpts_core/adjudication.py",
+  "description": "Manual adjudication scoring for metric classification. Reads CSV files with classifier predictions and human labels, computes confusion matrices, per-label precision/recall, completion rate, and value/source/replay verification counts.",
+  "function": "Inter-rater agreement scoring, confusion matrix, precision/recall for 6-label metric classification",
+  "inputs": [
+    {"name": "rows", "type": "List[Dict[str, str]]", "description": "List of row dicts with label and human_label fields"},
+    {"name": "pred_field", "type": "str", "description": "Column name for classifier predictions (default 'label')"},
+    {"name": "human_field", "type": "str", "description": "Column name for human ground truth (default 'human_label')"},
+    {"name": "labels", "type": "Sequence[str]", "description": "Ordered list of label classes (default LABELS)"},
+    {"name": "path", "type": "Path", "description": "CSV file path for read_adjudication_csv and write_confusion_matrix_csv"},
+    {"name": "matrix", "type": "Dict[str, Counter]", "description": "Confusion matrix for write_confusion_matrix_csv"},
+    {"name": "extra", "type": "Sequence[str]", "description": "Extra label columns for confusion matrix CSV (default EXTRA_LABELS)"},
+    {"name": "label", "type": "str", "description": "Single label to score in score_label"}
+  ],
+  "outputs": [
+    {"name": "build_confusion_matrix", "type": "Dict[str, Counter]", "description": "Confusion matrix: pred_label -> Counter[human_label]"},
+    {"name": "score_label", "type": "Dict[str, Any]", "description": "Per-label precision/recall/TP dict"},
+    {"name": "score_adjudication", "type": "Dict[str, Any]", "description": "Full adjudication result with per_label metrics and completion rate"},
+    {"name": "read_adjudication_csv", "type": "List[Dict[str, str]]", "description": "Parsed rows from adjudication CSV"},
+    {"name": "write_confusion_matrix_csv", "type": "None", "description": "Writes confusion matrix to CSV file"}
+  ],
+  "dependencies": {
+    "csv": "stdlib",
+    "pathlib": "stdlib",
+    "collections": "stdlib"
+  },
+  "public_api": [
+    "LABELS",
+    "EXTRA_LABELS",
+    "build_confusion_matrix",
+    "score_label",
+    "score_adjudication",
+    "read_adjudication_csv",
+    "write_confusion_matrix_csv"
+  ],
+  "status": "PRODUCTION_CANDIDATE",
+  "coverage": "82%",
+  "tests": "tests/test_MODULE_006.py",
+  "claim_ceiling": "LOCAL_ONLY__NO_EXTERNAL_PROOF"
+}

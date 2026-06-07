@@ -1,0 +1,161 @@
+{
+  "module_id": "MODULE_011_AUDIT_CLAIMS",
+  "version": "1.0.0",
+  "source_file": "gpts_core/audit_claims.py",
+  "description": "Scientific claim auditing with 7-section canonical reports. Audits a text claim against a corpus of artifacts using keyword overlap, channel-aware evidence extraction, and fail-closed verdict policy. Verdict scale: SUPPORTED / PARTIALLY SUPPORTED / WEAKLY SUPPORTED / UNSUPPORTED / UNCERTAIN. All outputs: LOCAL_LAB_ONLY — not external proof.",
+  "function": "Claim decomposition, evidence extraction, audit report generation (7-section canonical format)",
+  "inputs": [
+    {"name": "claim", "type": "str", "description": "The claim text to audit"},
+    {"name": "title", "type": "str", "description": "Title for the audit report"},
+    {"name": "inputs", "type": "Sequence[str]", "description": "List of file or directory paths to load as corpus"},
+    {"name": "add_conversation_source", "type": "bool", "description": "If True, add the claim itself as an unstable source"},
+    {"name": "artifacts", "type": "List[Tuple[Path, str]]", "description": "Loaded (path, text) pairs for extract_evidence"},
+    {"name": "top_k", "type": "int", "description": "Max number of evidence slices to return (default: 20)"},
+    {"name": "prop", "type": "str", "description": "Proposition string for assess_proposition"},
+    {"name": "evidence", "type": "List[EvidenceSlice]", "description": "Evidence slices for assess_proposition"},
+    {"name": "texts", "type": "List[str]", "description": "Text list for detect_logical_contradictions"},
+    {"name": "claims", "type": "List[Dict]", "description": "List of {title, claim} dicts for batch_audit"},
+    {"name": "report_text", "type": "str", "description": "Rendered markdown report for validate_canonical_report"}
+  ],
+  "outputs": [
+    {"name": "load_artifacts", "type": "Tuple[List, List[SourceRecord]]", "description": "Loaded (path, text) pairs and source records"},
+    {"name": "extract_evidence", "type": "List[EvidenceSlice]", "description": "Top-k ranked evidence slices"},
+    {"name": "decompose_claim", "type": "List[str]", "description": "List of testable proposition strings"},
+    {"name": "assess_proposition", "type": "PropositionAssessment", "description": "Support score, status, and supporting/opposing excerpts"},
+    {"name": "detect_logical_contradictions", "type": "List[str]", "description": "List of detected lexical contradiction descriptions"},
+    {"name": "audit_claim", "type": "AuditReport", "description": "Full 7-section audit report dataclass"},
+    {"name": "inspect_document", "type": "AuditReport", "description": "Audit report for document inspection without explicit claim"},
+    {"name": "validate_canonical_report", "type": "Tuple[bool, List[str]]", "description": "Validation result and list of missing sections/fields"},
+    {"name": "batch_audit", "type": "Dict[str, Any]", "description": "Summary dict with rows, verdict distribution, and confidence stats"}
+  ],
+  "dependencies": {
+    "stdlib": ["re", "pathlib", "dataclasses", "csv", "json", "math", "statistics"],
+    "third_party": []
+  },
+  "public_api": [
+    {
+      "name": "VERDICTS",
+      "signature": "VERDICTS: List[str]",
+      "returns": "List[str]",
+      "description": "Ordered verdict scale: SUPPORTED / PARTIALLY SUPPORTED / WEAKLY SUPPORTED / UNSUPPORTED / UNCERTAIN"
+    },
+    {
+      "name": "WEAKNESS_TYPES",
+      "signature": "WEAKNESS_TYPES: List[str]",
+      "returns": "List[str]",
+      "description": "Valid weakness types: Logical Contradiction, Observational Tension, Assumption Dependence, Explanatory Limit"
+    },
+    {
+      "name": "STATUSES",
+      "signature": "STATUSES: List[str]",
+      "returns": "List[str]",
+      "description": "Weakness statuses: Established, Contested, Speculative"
+    },
+    {
+      "name": "SEVERITIES",
+      "signature": "SEVERITIES: List[str]",
+      "returns": "List[str]",
+      "description": "Weakness severities: High, Medium, Low"
+    },
+    {
+      "name": "CAUSES",
+      "signature": "CAUSES: List[str]",
+      "returns": "List[str]",
+      "description": "Probable causes: Data, Measurement, Modeling, Parameters, New Physics"
+    },
+    {
+      "name": "STRICT_SECTIONS",
+      "signature": "STRICT_SECTIONS: List[str]",
+      "returns": "List[str]",
+      "description": "7 required section headings for canonical audit reports"
+    },
+    {
+      "name": "SourceRecord",
+      "signature": "SourceRecord(label, path, source_type, stable, excerpt=None)",
+      "returns": "SourceRecord",
+      "description": "Dataclass representing an input artifact source. render() returns formatted string."
+    },
+    {
+      "name": "EvidenceSlice",
+      "signature": "EvidenceSlice(source_label, channel, text, score=0.0)",
+      "returns": "EvidenceSlice",
+      "description": "Dataclass representing one scored evidence sentence from a source."
+    },
+    {
+      "name": "Weakness",
+      "signature": "Weakness(type, status, severity, probable_cause, discriminant_test, basis=None)",
+      "returns": "Weakness",
+      "description": "Dataclass for audit weakness entry. validate() checks field constraints. render(idx) returns micro-syntax string."
+    },
+    {
+      "name": "PropositionAssessment",
+      "signature": "PropositionAssessment(proposition, support_score, status, supporting, opposing)",
+      "returns": "PropositionAssessment",
+      "description": "Dataclass for assessed proposition with support score and evidence excerpts."
+    },
+    {
+      "name": "AuditReport",
+      "signature": "AuditReport(title, reformulated_question, verdict, confidence, ...)",
+      "returns": "AuditReport",
+      "description": "Full 7-section audit report dataclass. validate() checks constraints. render_markdown() returns canonical markdown. to_dict() returns serializable dict."
+    },
+    {
+      "name": "load_artifacts",
+      "signature": "load_artifacts(inputs: Sequence[str], max_chars_per_file: int = 25000) -> Tuple[List, List[SourceRecord]]",
+      "returns": "Tuple[List, List[SourceRecord]]",
+      "description": "Load text content from files/directories. Returns (loaded_pairs, sources)."
+    },
+    {
+      "name": "extract_evidence",
+      "signature": "extract_evidence(claim: str, artifacts: List[Tuple[Path, str]], top_k: int = 20) -> List[EvidenceSlice]",
+      "returns": "List[EvidenceSlice]",
+      "description": "Extract and rank evidence sentences from artifacts against a claim."
+    },
+    {
+      "name": "decompose_claim",
+      "signature": "decompose_claim(claim: str) -> List[str]",
+      "returns": "List[str]",
+      "description": "Decompose a compound claim into testable propositions."
+    },
+    {
+      "name": "assess_proposition",
+      "signature": "assess_proposition(prop: str, evidence: List[EvidenceSlice]) -> PropositionAssessment",
+      "returns": "PropositionAssessment",
+      "description": "Assess support level for one proposition against evidence slices."
+    },
+    {
+      "name": "detect_logical_contradictions",
+      "signature": "detect_logical_contradictions(texts: List[str]) -> List[str]",
+      "returns": "List[str]",
+      "description": "Scan combined text for lexical contradiction pairs."
+    },
+    {
+      "name": "audit_claim",
+      "signature": "audit_claim(claim: str, title: str, inputs: Sequence[str] = (), *, add_conversation_source: bool = False) -> AuditReport",
+      "returns": "AuditReport",
+      "description": "Audit a claim against a corpus of artifacts. Returns AuditReport."
+    },
+    {
+      "name": "inspect_document",
+      "signature": "inspect_document(title: str, inputs: Sequence[str] = ()) -> AuditReport",
+      "returns": "AuditReport",
+      "description": "Inspect a document corpus without an explicit claim. Returns AuditReport."
+    },
+    {
+      "name": "validate_canonical_report",
+      "signature": "validate_canonical_report(report_text: str) -> Tuple[bool, List[str]]",
+      "returns": "Tuple[bool, List[str]]",
+      "description": "Check that a rendered markdown report contains all 7 required sections."
+    },
+    {
+      "name": "batch_audit",
+      "signature": "batch_audit(claims: List[Dict], inputs: Sequence[str] = ()) -> Dict[str, Any]",
+      "returns": "Dict[str, Any]",
+      "description": "Run audit_claim on a list of {title, claim} dicts. Returns summary dict."
+    }
+  ],
+  "status": "PRODUCTION_CANDIDATE",
+  "coverage": "52%",
+  "tests": "tests/test_MODULE_011.py",
+  "claim_ceiling": "LOCAL_ONLY__NO_EXTERNAL_PROOF"
+}

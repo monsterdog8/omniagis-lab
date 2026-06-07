@@ -1,0 +1,84 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MODULE_016_CORE_INIT Schema",
+  "description": "Schema for the gpts_core package __init__.py — documents __all__ and re-export contracts",
+  "type": "object",
+  "properties": {
+    "__all__": {
+      "type": "array",
+      "description": "Complete list of all public symbols exported by gpts_core",
+      "items": {"type": "string"},
+      "minItems": 50
+    }
+  },
+  "export_groups": {
+    "signals": {
+      "symbols": ["analyze_signal", "structure_score"],
+      "source": "gpts_core.signals"
+    },
+    "classifier": {
+      "symbols": ["classify_metric", "LABELS"],
+      "source": "gpts_core.classifier"
+    },
+    "evidence": {
+      "symbols": ["build_raw_record", "validate_raw_record", "validate_raw_records",
+                  "summarize_csv", "audit_zip", "sha256_text", "sha256_file"],
+      "source": "gpts_core.evidence"
+    },
+    "gate": {
+      "symbols": ["classify_claim", "compute_evidence_score", "from_gate_counts",
+                  "maturity_map", "proof_firewall", "EvidenceInput", "EvidenceScore"],
+      "source": "gpts_core.gate"
+    },
+    "ledger": {
+      "symbols": ["AuditLedger", "ContextCitationLock"],
+      "source": "gpts_core.ledger"
+    },
+    "adjudication": {
+      "symbols": ["score_adjudication", "build_confusion_matrix"],
+      "source": "gpts_core.adjudication"
+    },
+    "manifest": {
+      "symbols": ["build_manifest", "write_manifest", "hash_file", "kind_for"],
+      "source": "gpts_core.manifest"
+    },
+    "benchmark": {
+      "symbols": ["train_linear", "predict_linear", "mse_score", "compare_prediction_lock"],
+      "source": "gpts_core.benchmark"
+    },
+    "promotion": {
+      "symbols": ["evaluate_promotion", "replay_jsonl_ledger", "validate_seal_ledger"],
+      "source": "gpts_core.promotion"
+    },
+    "coherence": {
+      "symbols": ["shannon_entropy", "joint_entropy", "mutual_information", "global_coherence",
+                  "digitize", "compute_metric_fields",
+                  "build_coherence_passport", "seal_passport_hashes", "validate_coherence_passport"],
+      "source": "gpts_core.coherence"
+    },
+    "audit_claims": {
+      "symbols": ["audit_claim", "inspect_document", "validate_canonical_report", "batch_audit",
+                  "decompose_claim", "extract_evidence",
+                  "AuditReport", "Weakness", "VERDICTS", "WEAKNESS_TYPES", "STRICT_SECTIONS"],
+      "source": "gpts_core.audit_claims"
+    },
+    "score_report": {
+      "symbols": ["evaluate_report", "score_audit_report",
+                  "extract_sections", "extract_verdict", "extract_confidence",
+                  "score_verdicts", "score_critical_points", "score_confidence",
+                  "score_discriminant_tests", "score_probative_separation",
+                  "score_weakness_taxonomy", "score_fail_closed"],
+      "source": "gpts_core.score_report"
+    },
+    "dynamics": {
+      "symbols": ["ContinuumState", "step_continuum", "continuum_energy", "run_continuum",
+                  "FractalState", "FractalEngine"],
+      "source": "gpts_core.dynamics"
+    },
+    "spectral_gap": {
+      "symbols": [],
+      "source": "gpts_core.spectral_gap",
+      "note": "Imported lazily — requires numpy. Not in __all__. Import directly from gpts_core.spectral_gap."
+    }
+  }
+}
