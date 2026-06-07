@@ -1,0 +1,103 @@
+{
+  "_schema": "CLASSIFICATION_MATRIX",
+  "_version": "1.0",
+  "_claim_ceiling": "LOCAL_ONLY__NO_EXTERNAL_PROOF",
+  "_status": "TEMPLATE__AWAITING_CANONICAL_PACKET",
+
+  "packet_reference": {
+    "packet_id": "C01-C08",
+    "packet_hash": "664a8690783af4ce62a72e80e08a50429d86e65b9645b91ae185084c309d1013",
+    "canonical": false,
+    "note": "Fill this field only after owner confirms CANONICAL_v1"
+  },
+
+  "auditors": [
+    {
+      "auditor_id": "HUMAN_01",
+      "auditor_type": "HUMAN",
+      "blind": true,
+      "timestamp_start": null,
+      "timestamp_end": null
+    },
+    {
+      "auditor_id": "HUMAN_02",
+      "auditor_type": "HUMAN",
+      "blind": true,
+      "timestamp_start": null,
+      "timestamp_end": null
+    },
+    {
+      "auditor_id": "GPT",
+      "auditor_type": "AI",
+      "blind": true,
+      "timestamp_start": null,
+      "timestamp_end": null
+    },
+    {
+      "auditor_id": "CLAUDE",
+      "auditor_type": "AI",
+      "blind": true,
+      "timestamp_start": null,
+      "timestamp_end": null
+    },
+    {
+      "auditor_id": "GROK",
+      "auditor_type": "AI",
+      "blind": true,
+      "timestamp_start": null,
+      "timestamp_end": null
+    }
+  ],
+
+  "label_schema": {
+    "values": ["SUPPORTED", "PARTIALLY_SUPPORTED", "UNSUPPORTED", "INSUFFICIENT_EVIDENCE"],
+    "confidence_range": [0, 10],
+    "required_fields": ["auditor_id", "claim_id", "label", "confidence", "rationale_brief"]
+  },
+
+  "classifications": [
+    {
+      "_note": "One entry per (auditor × claim) pair. Total entries = 5 auditors × 8 claims = 40 rows.",
+      "auditor_id": null,
+      "claim_id": null,
+      "claim_hash": null,
+      "label": null,
+      "confidence": null,
+      "rationale_brief": null,
+      "timestamp": null
+    }
+  ],
+
+  "computed_metrics": {
+    "_status": "NOT_YET_COMPUTED",
+    "krippendorff_alpha": null,
+    "alpha_level": null,
+    "n_auditors": null,
+    "n_claims": null,
+    "n_classifications": null,
+    "inter_rater_verdict": null,
+    "c08_gate_result": null
+  },
+
+  "c08_gate": {
+    "_description": "Gate that evaluates computed alpha against threshold",
+    "alpha_threshold_minimum": 0.667,
+    "alpha_threshold_substantial": 0.800,
+    "result": null,
+    "blocked_claims_on_fail": [
+      "external_replication",
+      "scientific_validation",
+      "public_promotion"
+    ]
+  },
+
+  "pipeline_log": {
+    "packet_confirmed": null,
+    "auditors_assigned": null,
+    "classifications_complete": null,
+    "matrix_sealed": null,
+    "alpha_computed": null,
+    "c08_gate_evaluated": null,
+    "meta_audit_complete": null
+  }
+}
