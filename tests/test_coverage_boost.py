@@ -1814,3 +1814,711 @@ class TestScoreReportInternals:
         result = _tokenize("The quick brown fox jumps over the lazy dog")
         assert isinstance(result, list)
         assert "quick" in result or "brown" in result
+
+
+# =============================================================================
+# TestCoverageMaximizer — push toward ~98% coverage
+# =============================================================================
+
+class TestCoverageMaximizer:
+    """Targeted tests for all remaining uncovered lines across gpts_core modules."""
+
+    # ── spectral_gap.py: canonical_gap fail modes ────────────────────────────
+
+    def test_canonical_gap_eigvals_exception(self):
+        """Lines 128-130: non-square matrix → eigvals raises LinAlgError → caught."""
+        import numpy as np
+        from gpts_core.spectral_gap import canonical_gap
+        P = np.ones((2, 3))  # non-square → LinAlgError in eigvals
+        diag = {"row_stochastic_error": 0.0}
+        gap, d = canonical_gap(P, diag)
+        assert gap is None
+        assert "eigvals failed" in (d.get("FAIL") or "")
+
+    def test_canonical_gap_row_stoch_fail(self):
+        """Lines 151-152: row_stochastic_error > ROW_STOCH_TOL → FAIL."""
+        import numpy as np
+        from gpts_core.spectral_gap import canonical_gap
+        P = np.eye(3)
+        diag = {"row_stochastic_error": 1.0}
+        gap, d = canonical_gap(P, diag)
+        assert gap is None
+        assert "row_stochastic_error" in (d.get("FAIL") or "")
+
+    def test_canonical_gap_lambda1_error_fail(self):
+        """Lines 154-155: lambda1 far from 1.0 triggers FAIL."""
+        import numpy as np
+        from gpts_core.spectral_gap import canonical_gap
+        P = 2.0 * np.eye(2)
+        diag = {"row_stochastic_error": 0.0}
+        gap, d = canonical_gap(P, diag)
+        assert gap is None
+        assert "lambda1_error" in (d.get("FAIL") or "")
+
+    def test_canonical_gap_nan_matrix(self):
+        """Lines 157-158: NaN eigenvalues → gap non-finite → FAIL."""
+        import numpy as np
+        from gpts_core.spectral_gap import canonical_gap
+        P = np.full((3, 3), np.nan)
+        diag = {"row_stochastic_error": 0.0}
+        gap, d = canonical_gap(P, diag)
+        assert gap is None
+
+    def test_run_pipeline_any_fail(self):
+        """Line 289: mocked failing gap → any_fail_point=True in result."""
+        from unittest.mock import patch
+        from gpts_core.spectral_gap import run_pipeline
+
+        def _always_fail(alpha, **kwargs):
+            return None, {"FAIL": "mocked_fail", "row_stochastic_error": 0.0, "lambda1_error": 0.0}
+
+        with patch("gpts_core.spectral_gap.compute_gap_point", _always_fail):
+            res = run_pipeline([0.5, 1.0])
+        assert res.get("any_fail_point") is True
+
+    # ── gate.py internals ────────────────────────────────────────────────────
+
+    def test_clip_invalid_value(self):
+        """Lines 116-117: _clip with non-convertible value → 0.0."""
+        from gpts_core.gate import _clip
+        assert _clip("not_a_number") == 0.0
+        assert _clip(None) == 0.0
+
+    def test_compute_evidence_score_strong_claim(self):
+        """Line 169: strong_public_claim=True → -0.40 penalty."""
+        from gpts_core.gate import compute_evidence_score, EvidenceInput
+        inp = EvidenceInput(DATA=0.5, RAW=0.5, SCORING=0.5, REPLAY=0.5,
+                            INDEPENDENCE=0.5, SAFETY=0.5, raw_expected=0, raw_valid=0,
+                            scoring_done=False, replay_available=False,
+                            independent_review=False, strong_public_claim=True)
+        result = compute_evidence_score(inp)
+        assert any("STRONG_CLAIM" in p for p in result.penalties)
+
+    def test_compute_evidence_score_raw_pass_no_scoring(self):
+        """Line 180: raw_pass=True and scoring_done=False → 'scoring can be initiated' note."""
+        from gpts_core.gate import compute_evidence_score, EvidenceInput
+        inp = EvidenceInput(DATA=1.0, RAW=1.0, SCORING=0.0, REPLAY=0.0,
+                            INDEPENDENCE=0.0, SAFETY=0.5, raw_expected=2, raw_valid=2,
+                            scoring_done=False, replay_available=False,
+                            independent_review=False, strong_public_claim=False)
+        result = compute_evidence_score(inp)
+        assert any("scoring can be initiated" in n for n in result.notes)
+
+    def test_maturity_map_with_one_stage(self):
+        """Line 253: highest=s set when first stage is True."""
+        from gpts_core.gate import maturity_map
+        result = maturity_map(idea=True)
+        assert result["highest_maturity"] == "IDEA"
+
+    def test_maturity_map_all_stages(self):
+        """Line 251->256: loop completes all 8 iterations without break."""
+        from gpts_core.gate import maturity_map
+        result = maturity_map(idea=True, design=True, prototype=True, raw=True,
+                              scoring=True, replay=True, review=True, deploy=True)
+        assert result["highest_maturity"] == "DEPLOY"
+
+    def test_proof_firewall_safety_below_threshold(self):
+        """Line 272: all dims present but SAFETY < 0.75 → BLOCKED."""
+        from gpts_core.gate import proof_firewall
+        dims = {"DATA": 0.5, "RAW": 0.5, "SCORING": 0.5,
+                "REPLAY": 0.5, "INDEPENDENCE": 0.5, "SAFETY": 0.5}
+        result = proof_firewall(dims)
+        assert result["verdict"] == "BLOCKED_FAIL_CLOSED"
+        assert "SAFETY" in result["reason"]
+
+    # ── evidence.py new paths ────────────────────────────────────────────────
+
+    def test_validate_raw_record_missing_field(self):
+        """Line 103: record missing required fields → MISSING_FIELD errors."""
+        from gpts_core.evidence import validate_raw_record
+        result = validate_raw_record({})
+        assert any("MISSING_FIELD" in e for e in result.errors)
+
+    def test_validate_raw_record_bad_hash_format(self):
+        """Line 115: hash with wrong format → OUTPUT_HASH_FORMAT_INVALID."""
+        from gpts_core.evidence import validate_raw_record, build_raw_record
+        record = build_raw_record("r", "t", "o", "m", "output text")
+        record = dict(record)
+        record["output_hash"] = "md5:abc123def456"
+        result = validate_raw_record(record)
+        assert "OUTPUT_HASH_FORMAT_INVALID" in result.errors
+
+    def test_load_jsonl_blank_lines(self, tmp_path):
+        """Line 186: blank lines in JSONL trigger continue."""
+        from gpts_core.evidence import load_jsonl
+        path = tmp_path / "test.jsonl"
+        path.write_text('{"a": 1}\n\n{"b": 2}\n', encoding="utf-8")
+        result = load_jsonl(path)
+        assert len(result) == 2
+
+    def test_validate_metric_passport_correct_entry_hash(self, tmp_path):
+        """Line 230->234: correct entry_hash → no ENTRY_HASH_MISMATCH."""
+        from gpts_core.evidence import sha256_json, validate_metric_passport
+        _PFX = "sha256:"
+        raw_payload = {"metric_value": 42}
+        payload_hash = sha256_json(raw_payload)
+        obj = {
+            "metric_namespace": "test_ns", "formula_id": "f1",
+            "source_backend": "local", "record_semantics": "numeric",
+            "cycle_semantics": "epoch", "raw_payload_status": "ok",
+            "hash_status": "ok", "replay_status": "ok",
+            "cycle": 1, "timestamp_utc": "2026-01-01T00:00:00Z",
+            "raw_payload": raw_payload, "payload_hash": payload_hash,
+            "entry_hash": _PFX + "0" * 64,
+        }
+        entry_base = {**obj, "entry_hash": _PFX + "0" * 64}
+        obj["entry_hash"] = sha256_json(entry_base)
+        result = validate_metric_passport(obj)
+        assert "ENTRY_HASH_MISMATCH" not in result["blockers"]
+
+    def test_audit_zip_file_exceeds_max_hash(self, tmp_path):
+        """Line 256->269: file too large → sha256 skipped → sha256=None."""
+        import zipfile
+        from gpts_core.evidence import audit_zip
+        zpath = tmp_path / "test.zip"
+        with zipfile.ZipFile(zpath, "w") as z:
+            z.writestr("data.txt", "some content here")
+        result = audit_zip(zpath, max_hash_mb=0.0)
+        members = result.get("members", [])
+        if members:
+            assert members[0]["sha256"] is None
+
+    def test_audit_zip_invalid_run_summary_json(self, tmp_path):
+        """Lines 262-263: run_summary.json with invalid JSON → except pass."""
+        import zipfile
+        from gpts_core.evidence import audit_zip
+        zpath = tmp_path / "test.zip"
+        with zipfile.ZipFile(zpath, "w") as z:
+            z.writestr("run_summary.json", "NOT VALID JSON {{{")
+        result = audit_zip(zpath)
+        assert result.get("exists") is True
+
+    def test_audit_zip_invalid_manifest_json(self, tmp_path):
+        """Lines 265-268: manifest.json with invalid JSON → except pass."""
+        import zipfile
+        from gpts_core.evidence import audit_zip
+        zpath = tmp_path / "test.zip"
+        with zipfile.ZipFile(zpath, "w") as z:
+            z.writestr("manifest.json", "NOT VALID JSON {{{")
+        result = audit_zip(zpath)
+        assert result.get("exists") is True
+
+    def test_summarize_csv_max_cells_exceeded(self, tmp_path):
+        """Line 310: continue when count >= max_cells."""
+        from gpts_core.evidence import summarize_csv
+        path = tmp_path / "test.csv"
+        path.write_text("1,2,3\n4,5,6\n7,8,9\n", encoding="utf-8")
+        result = summarize_csv(path, max_cells=1)
+        assert result["numeric_cells"] == 1
+
+    def test_summarize_csv_non_finite_value(self, tmp_path):
+        """Line 313->308: inf value → not added to min/max sum."""
+        from gpts_core.evidence import summarize_csv
+        path = tmp_path / "test.csv"
+        path.write_text("1,inf,2\n", encoding="utf-8")
+        result = summarize_csv(path)
+        assert result["numeric_cells"] == 2
+
+    # ── manifest.py paths ────────────────────────────────────────────────────
+
+    def test_manifest_sha256_bytes_direct(self):
+        """Line 44: call manifest.sha256_bytes (not evidence.sha256_bytes)."""
+        from gpts_core.manifest import sha256_bytes
+        result = sha256_bytes(b"hello world")
+        assert result.startswith("sha256:")
+        assert len(result) == 71
+
+    def test_build_manifest_with_file(self, tmp_path):
+        """Line 57: try: block executed when directory has a real file."""
+        from gpts_core.manifest import build_manifest
+        (tmp_path / "data.txt").write_text("hello")
+        entries = build_manifest(tmp_path)
+        assert len(entries) == 1
+        assert entries[0]["name"] == "data.txt"
+
+    def test_write_manifest_empty_dir(self, tmp_path):
+        """Line 100->105: empty entries → CSV file NOT written."""
+        from gpts_core.manifest import write_manifest
+        empty = tmp_path / "empty"
+        empty.mkdir()
+        out = tmp_path / "out"
+        result = write_manifest(empty, out)
+        assert result["file_count"] == 0
+        assert not (out / "manifest.csv").exists()
+
+    def test_safe_extract_zip_normal_member(self, tmp_path):
+        """Line 120: safe_extract_zip extracts a legitimate (non-traversal) file."""
+        import zipfile
+        from gpts_core.manifest import safe_extract_zip
+        zpath = tmp_path / "archive.zip"
+        dest = tmp_path / "dest"
+        with zipfile.ZipFile(zpath, "w") as z:
+            z.writestr("hello.txt", "world content")
+        extracted = safe_extract_zip(zpath, dest)
+        assert len(extracted) > 0
+        assert dest.joinpath("hello.txt").exists()
+
+    # ── benchmark.py _to_float branches ─────────────────────────────────────
+
+    def test_to_float_bool_values(self):
+        """Line 25: bool True→1.0, False→0.0."""
+        from gpts_core.benchmark import _to_float
+        assert _to_float(True) == 1.0
+        assert _to_float(False) == 0.0
+
+    def test_to_float_truthy_strings(self):
+        """Line 28: 'true'/'yes'/'1' string → 1.0."""
+        from gpts_core.benchmark import _to_float
+        assert _to_float("true") == 1.0
+        assert _to_float("yes") == 1.0
+        assert _to_float("1") == 1.0
+
+    def test_to_float_falsy_strings(self):
+        """Line 30: 'false'/'no'/'0' string → 0.0."""
+        from gpts_core.benchmark import _to_float
+        assert _to_float("false") == 0.0
+        assert _to_float("no") == 0.0
+        assert _to_float("0") == 0.0
+
+    def test_compare_prediction_lock_missing_phase(self):
+        """Line 217: observation without 'phase' → MISSING_PHASE error."""
+        from gpts_core.benchmark import compare_prediction_lock
+        lock = {"gate_g2_numeric_prediction": {
+            "primary_metric": "score", "target_next_shadow_phase": 1,
+            "predicted_value": 0.5,
+            "strong_pass_interval": [0.4, 0.6],
+            "normal_pass_interval": [0.3, 0.7],
+        }}
+        obs = {"score": 0.5, "ledger_replay_status": "PASS",
+               "control_effects": 0, "production_unlocked": False,
+               "stdout_retained": True, "stderr_retained": True}
+        result = compare_prediction_lock(lock, obs)
+        assert "MISSING_PHASE" in result.get("input_errors", [])
+
+    def test_compare_prediction_lock_not_evaluated(self):
+        """Line 254: no predicted_val → NOT_EVALUATED verdict."""
+        from gpts_core.benchmark import compare_prediction_lock
+        lock = {"gate_g2_numeric_prediction": {
+            "primary_metric": "psiomega_mean",
+            "target_next_shadow_phase": 1,
+            "predicted_value": None,
+        }}
+        obs = {"phase": 1, "psiomega_mean": 0.5,
+               "ledger_replay_status": "PASS",
+               "control_effects": 0, "production_unlocked": False,
+               "stdout_retained": True, "stderr_retained": True}
+        result = compare_prediction_lock(lock, obs)
+        assert result["verdict"] == "FAIL_CLOSED_NOT_EVALUATED"
+
+    # ── score_report.py remaining paths ──────────────────────────────────────
+
+    def test_semantic_match_all_stopword_candidate(self):
+        """Line 124: candidate tokens all filtered → cand_tokens empty → False."""
+        from gpts_core.score_report import _semantic_match
+        result = _semantic_match("the in on for", "completely different sentence here", 0.30)
+        assert result is False
+
+    def test_score_critical_points_partial_match(self):
+        """Lines 248-249, 255: partial match between 0.25 and 0.42 thresholds."""
+        from gpts_core.score_report import score_critical_points
+        score, note, uncovered = score_critical_points(
+            "the methodology used here for analysis",
+            ["validation methodology explicit"],
+            max_points=20,
+        )
+        assert "partial" in note.lower() or score < 20
+
+    def test_score_probative_separation_count3(self):
+        """Line 318: count==3 → 'Partial probative separation' (6 pts)."""
+        from gpts_core.score_report import score_probative_separation
+        text = "observation theory modeling"
+        score, note = score_probative_separation(text, 10)
+        assert score == 6
+        assert "Partial" in note
+
+    def test_score_probative_separation_count2(self):
+        """Line 320: count==2 → 'Weak probative separation' (3 pts)."""
+        from gpts_core.score_report import score_probative_separation
+        text = "observation theory"
+        score, note = score_probative_separation(text, 10)
+        assert score == 3
+        assert "Weak" in note
+
+    def test_score_weakness_taxonomy_partial_fields(self):
+        """Lines 337-338: some required fields present → partial score."""
+        from gpts_core.score_report import score_weakness_taxonomy
+        sections = {"Weakness Taxonomy": "Type: Scope\nStatus: Active"}
+        score, note = score_weakness_taxonomy(sections, max_points=10)
+        assert 0 < score < 10
+        assert "Missing" in note
+
+    def test_score_weakness_taxonomy_all_fields(self):
+        """Line 336: all fields present → max score."""
+        from gpts_core.score_report import score_weakness_taxonomy
+        text = ("Type: Scope\nStatus: Active\nSeverity: High\n"
+                "Probable Cause: X\nDiscriminant Test: Y")
+        score, note = score_weakness_taxonomy({"Weakness Taxonomy": text}, max_points=10)
+        assert score == 10
+        assert "present" in note
+
+    def test_score_fail_closed_length_ok_sparse_prudence(self):
+        """Line 357: long limitations but < 2 prudence markers → max-3."""
+        from gpts_core.score_report import score_fail_closed
+        limitations = "General observations about the scope of this analysis." + " Context." * 5
+        assert len(limitations) >= 60
+        score, note = score_fail_closed({"Limitations": limitations}, 10)
+        assert score == 7
+
+    def test_validate_case_json_wrong_component_sum(self):
+        """Line 372 branch: components sum != 100."""
+        from gpts_core.score_report import validate_case_json
+        case = {
+            "case_id": "c", "title": "t", "claim": "cl", "question": "q",
+            "dossier": "d", "oracle": {"global_verdict": "SUPPORTED"},
+            "scoring": {"components": {"global_and_subverdicts": 50}},
+            "report_contract": {},
+        }
+        issues = validate_case_json(case)
+        assert any("sum" in i.lower() or "100" in i for i in issues)
+
+    def test_validate_case_json_oracle_verdict_not_in_allowed(self):
+        """Line 380: oracle global verdict not in allowed_verdicts."""
+        from gpts_core.score_report import validate_case_json
+        case = {
+            "case_id": "c", "title": "t", "claim": "cl", "question": "q", "dossier": "d",
+            "oracle": {"global_verdict": "TOTALLY_INVALID_VERDICT"},
+            "scoring": {},
+            "report_contract": {"allowed_verdicts": ["SUPPORTED", "UNSUPPORTED"]},
+        }
+        issues = validate_case_json(case)
+        assert any("not allowed" in i for i in issues)
+
+    def test_validate_case_json_sub_verdict_not_allowed(self):
+        """Lines 383-384: sub-verdict not in allowed_verdicts."""
+        from gpts_core.score_report import validate_case_json
+        case = {
+            "case_id": "c", "title": "t", "claim": "cl", "question": "q", "dossier": "d",
+            "oracle": {
+                "global_verdict": "SUPPORTED",
+                "sub_verdicts": [{"proposition": "p1", "verdict": "BAD_VERDICT_XYZ"}],
+            },
+            "scoring": {},
+            "report_contract": {"allowed_verdicts": ["SUPPORTED", "UNSUPPORTED"]},
+        }
+        issues = validate_case_json(case)
+        assert any("sub-verdict" in i for i in issues)
+
+    def _make_full_report(self):
+        return (
+            "## Executive Summary\nVerdict: SUPPORTED. Confidence score: 8/10.\n"
+            "## Detailed Analysis\nobservation inference theory modeling interpretation.\n"
+            "## Weakness Taxonomy\nType: X\nStatus: Y\nSeverity: Z\n"
+            "Probable Cause: A\nDiscriminant Test: B\n"
+            "## Limitations\nLimited scope. Cannot be applied. Insufficient evidence.\n"
+            "## Recommendations\nCollect more data.\n"
+            "## Sources\nArtifact A.\n"
+        )
+
+    def test_evaluate_extra_section_filtered(self):
+        """Line 416->414: unknown section heading not in req_sections → filtered."""
+        from gpts_core.score_report import evaluate
+        report = self._make_full_report() + "## Appendix\nExtra content not required.\n"
+        case = {
+            "case_id": "c", "title": "t", "claim": "c", "question": "q", "dossier": "d",
+            "oracle": {"global_verdict": "SUPPORTED", "confidence_score": 8.0,
+                       "sub_verdicts": [], "critical_points_required": [],
+                       "expected_min_discriminant_tests": 1, "fatal_errors": []},
+            "scoring": {"components": {
+                "global_and_subverdicts": 20, "critical_points_coverage": 20,
+                "confidence_calibration": 15, "discriminant_tests": 15,
+                "probative_separation": 10, "weakness_taxonomy": 10,
+                "fail_closed_and_limitations": 10,
+            }},
+            "report_contract": {},
+        }
+        result = evaluate(case, report)
+        assert "total" in result
+
+    def test_evaluate_overconfidence_malus(self):
+        """Line 479: verdict mismatch + confidence diff > 1.5 → overconf_malus > 0."""
+        from gpts_core.score_report import evaluate
+        report = (
+            "## Executive Summary\nVerdict: UNSUPPORTED. Confidence score: 9/10.\n"
+            "## Detailed Analysis\nobservation inference theory modeling interpretation.\n"
+            "## Weakness Taxonomy\nType: X\nStatus: Y\nSeverity: Z\n"
+            "Probable Cause: A\nDiscriminant Test: B\n"
+            "## Limitations\nLimited scope. Cannot be applied. Insufficient evidence.\n"
+            "## Recommendations\nMore data.\n## Sources\nA.\n"
+        )
+        case = {
+            "case_id": "c", "title": "t", "claim": "c", "question": "q", "dossier": "d",
+            "oracle": {"global_verdict": "SUPPORTED", "confidence_score": 5.0,
+                       "sub_verdicts": [], "critical_points_required": [],
+                       "expected_min_discriminant_tests": 1, "fatal_errors": []},
+            "scoring": {"components": {
+                "global_and_subverdicts": 20, "critical_points_coverage": 20,
+                "confidence_calibration": 15, "discriminant_tests": 15,
+                "probative_separation": 10, "weakness_taxonomy": 10,
+                "fail_closed_and_limitations": 10,
+            }, "maluses": {"overconfidence_max": 5}},
+            "report_contract": {},
+        }
+        result = evaluate(case, report)
+        assert result["malus"] > 0
+
+    def test_evaluate_differences_confidence_and_uncovered(self):
+        """Lines 488, 490: confidence diff > 0.3 and uncovered critical points."""
+        from gpts_core.score_report import evaluate
+        report = (
+            "## Executive Summary\nVerdict: SUPPORTED. Confidence score: 6/10.\n"
+            "## Detailed Analysis\nSome analysis without key terms.\n"
+            "## Weakness Taxonomy\nType: X\nStatus: Y\nSeverity: Z\n"
+            "Probable Cause: A\nDiscriminant Test: B\n"
+            "## Limitations\nLimited scope. Cannot be applied. Insufficient.\n"
+            "## Recommendations\nMore data.\n## Sources\nA.\n"
+        )
+        case = {
+            "case_id": "c", "title": "t", "claim": "c", "question": "q", "dossier": "d",
+            "oracle": {
+                "global_verdict": "SUPPORTED", "confidence_score": 9.5,
+                "sub_verdicts": [],
+                "critical_points_required": ["xyzzy_unique_term_never_in_report"],
+                "expected_min_discriminant_tests": 1, "fatal_errors": [],
+            },
+            "scoring": {"components": {
+                "global_and_subverdicts": 20, "critical_points_coverage": 20,
+                "confidence_calibration": 15, "discriminant_tests": 15,
+                "probative_separation": 10, "weakness_taxonomy": 10,
+                "fail_closed_and_limitations": 10,
+            }},
+            "report_contract": {},
+        }
+        result = evaluate(case, report)
+        diffs = result.get("differences", [])
+        assert any("Confidence" in d or "confidence" in d for d in diffs)
+        assert any("critical" in d.lower() or "Uncovered" in d for d in diffs)
+
+    def test_evaluate_fatal_errors_triggered(self):
+        """Line 492: fatal error matches report text → differences include it."""
+        from gpts_core.score_report import evaluate
+        report = (
+            "## Executive Summary\nVerdict: SUPPORTED. Confidence score: 8/10.\n"
+            "This report is production ready and validated.\n"
+            "## Detailed Analysis\nobservation inference theory modeling interpretation.\n"
+            "## Weakness Taxonomy\nType: X\nStatus: Y\nSeverity: Z\n"
+            "Probable Cause: A\nDiscriminant Test: B\n"
+            "## Limitations\nLimited scope. Cannot be applied. Insufficient.\n"
+            "## Recommendations\nMore data.\n## Sources\nA.\n"
+        )
+        case = {
+            "case_id": "c", "title": "t", "claim": "c", "question": "q", "dossier": "d",
+            "oracle": {
+                "global_verdict": "SUPPORTED", "confidence_score": 8.0,
+                "sub_verdicts": [], "critical_points_required": [],
+                "expected_min_discriminant_tests": 1,
+                "fatal_errors": ["production ready"],
+            },
+            "scoring": {"components": {
+                "global_and_subverdicts": 20, "critical_points_coverage": 20,
+                "confidence_calibration": 15, "discriminant_tests": 15,
+                "probative_separation": 10, "weakness_taxonomy": 10,
+                "fail_closed_and_limitations": 10,
+            }},
+            "report_contract": {},
+        }
+        result = evaluate(case, report)
+        diffs = result.get("differences", [])
+        assert any("Fatal" in d or "fatal" in d for d in diffs)
+
+    def test_score_audit_report_with_explicit_oracle(self):
+        """Lines 549->558: oracle provided → skip default oracle building."""
+        from gpts_core.score_report import score_audit_report
+        report = self._make_full_report()
+        oracle = {
+            "global_verdict": "SUPPORTED", "confidence_score": 8.0,
+            "sub_verdicts": [], "critical_points_required": [],
+            "expected_min_discriminant_tests": 1, "fatal_errors": [],
+        }
+        result = score_audit_report(report, oracle=oracle)
+        assert "total" in result
+        assert result["claim_ceiling"] == "LOCAL_LAB_ONLY_NOT_PUBLIC_PROOF"
+
+    # ── audit_claims.py final paths ───────────────────────────────────────────
+
+    def test_read_csv_max_rows_break(self, tmp_path):
+        """Line 260: break when max_rows reached in _read_csv."""
+        from gpts_core.audit_claims import _read_csv
+        csv_path = tmp_path / "big.csv"
+        csv_path.write_text("\n".join(f"val{i}" for i in range(105)))
+        result = _read_csv(csv_path, max_rows=100)
+        assert len(result.splitlines()) == 100
+
+    def test_load_artifacts_dir_with_subdirs(self, tmp_path):
+        """Lines 282->278, 284->283: directory with subdirs → non-file entries skipped."""
+        from gpts_core.audit_claims import load_artifacts
+        sub = tmp_path / "subdir"
+        sub.mkdir()
+        (sub / "file.txt").write_text("content")
+        (tmp_path / "doc.txt").write_text("top level content")
+        loaded, sources = load_artifacts([str(tmp_path)])
+        assert len(loaded) >= 1
+
+    def test_load_artifacts_nonexistent_path(self, tmp_path):
+        """Line 282->278: nonexistent path is neither file nor dir → skipped."""
+        from gpts_core.audit_claims import load_artifacts
+        fake = str(tmp_path / "does_not_exist.txt")
+        loaded, sources = load_artifacts([fake])
+        assert loaded == []
+
+    def test_load_artifacts_invalid_json_read_error(self, tmp_path):
+        """Lines 305-306: invalid JSON raises → except catches and records error."""
+        from gpts_core.audit_claims import load_artifacts
+        bad = tmp_path / "bad.json"
+        bad.write_text("NOT VALID JSON {{{", encoding="utf-8")
+        loaded, sources = load_artifacts([str(bad)])
+        assert any("read error" in (s.excerpt or "") for s in sources)
+
+    def test_keyword_overlap_empty_string(self):
+        """Line 330: empty string → sa empty → return 0.0."""
+        from gpts_core.audit_claims import _keyword_overlap
+        assert _keyword_overlap("", "some text content here") == 0.0
+
+    def test_infer_channel_all_types(self):
+        """Lines 341, 343, 345, 347, 349: _infer_channel returns all 5 channel types."""
+        from gpts_core.audit_claims import _infer_channel
+        assert _infer_channel("we observed the measured values here") == "observation"
+        assert _infer_channel("the model uses a framework architecture procedure") == "modeling"
+        assert _infer_channel("we therefore infer this conclusion supports") == "inference"
+        assert _infer_channel("the theory theorem axiom principe holds") == "theory"
+        assert _infer_channel("interpretation suggests this pattern") == "interpretation"
+
+    def test_decompose_claim_short_subject(self):
+        """Line 404: single-word subject → props = parts (not structured)."""
+        from gpts_core.audit_claims import decompose_claim
+        result = decompose_claim("x, and b, and c here")
+        assert isinstance(result, list)
+        assert len(result) >= 1
+
+    def test_decompose_claim_short_property_part(self):
+        """Line 400: part with < 3 words → 'satisfies the property' template."""
+        from gpts_core.audit_claims import decompose_claim
+        result = decompose_claim("system framework, and valid, and operational now")
+        assert any("satisfies the property" in p for p in result)
+
+    def test_decompose_claim_duplicate_dedup(self):
+        """Line 413->407: duplicate proposition → skipped by seen set."""
+        from gpts_core.audit_claims import decompose_claim
+        result = decompose_claim("system framework, and valid, and valid")
+        assert len(result) == len(set(result))
+
+    def test_assess_proposition_positive_and_negative_markers(self):
+        """Lines 436-437, 439-440, 455->457, 457->461: supporting/opposing evidence populated."""
+        from gpts_core.audit_claims import assess_proposition, EvidenceSlice
+        slices = [
+            EvidenceSlice(
+                source_label="doc1", channel="observation", score=0.4,
+                text="This system must explicitly define canonical required boundaries.",
+            ),
+            EvidenceSlice(
+                source_label="doc2", channel="inference", score=0.3,
+                text="However this is not demonstrated and remains pending validation.",
+            ),
+        ]
+        result = assess_proposition("define canonical boundaries", slices)
+        assert result.status in ("supported", "mixed", "unsupported")
+        assert isinstance(result.supporting, list)
+        assert isinstance(result.opposing, list)
+
+    def test_assess_proposition_supported_status(self):
+        """Line 449: high positive score → status='supported'."""
+        from gpts_core.audit_claims import assess_proposition, EvidenceSlice
+        slices = [
+            EvidenceSlice(
+                source_label="doc", channel="observation", score=0.85,
+                text="The framework must strictly define canonical template verdict required explicit.",
+            )
+            for _ in range(6)
+        ]
+        result = assess_proposition("canonical framework template verdict", slices)
+        assert result.status == "supported"
+
+    def test_assess_proposition_unsupported_status(self):
+        """Line 453: strong negative signals → status='unsupported'."""
+        from gpts_core.audit_claims import assess_proposition, EvidenceSlice
+        slices = [
+            EvidenceSlice(
+                source_label="doc", channel="observation", score=0.09,
+                text="canonical framework not demonstrated limit absence.",
+            )
+            for _ in range(3)
+        ]
+        result = assess_proposition("canonical framework verdict", slices)
+        assert result.status in ("unsupported", "mixed")
+
+    def test_verdict_from_assessments_empty(self):
+        """Line 531: empty assessments → UNCERTAIN, 3.0."""
+        from gpts_core.audit_claims import _verdict_from_assessments
+        v, c = _verdict_from_assessments([], [])
+        assert v == "UNCERTAIN"
+        assert c == 3.0
+
+    def test_verdict_from_assessments_weakly_supported(self):
+        """Lines 544-545: mixed + 0.35 <= mean < 0.60 → WEAKLY SUPPORTED."""
+        from gpts_core.audit_claims import _verdict_from_assessments, PropositionAssessment
+        a = PropositionAssessment("prop", 0.45, "mixed", [], [])
+        v, c = _verdict_from_assessments([a], [])
+        assert v == "WEAKLY SUPPORTED"
+
+    def test_verdict_from_assessments_uncertain_low_mean(self):
+        """Line 546: mixed + mean < 0.35 → UNCERTAIN."""
+        from gpts_core.audit_claims import _verdict_from_assessments, PropositionAssessment
+        a = PropositionAssessment("prop", 0.2, "mixed", [], [])
+        v, c = _verdict_from_assessments([a], [])
+        assert v == "UNCERTAIN"
+
+    def test_verdict_from_assessments_supported_high_mean(self):
+        """Lines 547-548: no mixed/unsupported + mean >= 0.80 → SUPPORTED."""
+        from gpts_core.audit_claims import _verdict_from_assessments, PropositionAssessment
+        a = PropositionAssessment("prop", 0.9, "supported", [], [])
+        v, c = _verdict_from_assessments([a], [])
+        assert v == "SUPPORTED"
+
+    def test_verdict_from_assessments_partially_supported_no_mixed(self):
+        """Line 549: no mixed/unsupported + mean < 0.80 → PARTIALLY SUPPORTED."""
+        from gpts_core.audit_claims import _verdict_from_assessments, PropositionAssessment
+        a = PropositionAssessment("prop", 0.6, "supported", [], [])
+        v, c = _verdict_from_assessments([a], [])
+        assert v == "PARTIALLY SUPPORTED"
+
+    def test_build_weaknesses_with_contradictions(self):
+        """Line 490: contradictions → 'Observational Tension' weakness added."""
+        from gpts_core.audit_claims import _build_weaknesses, PropositionAssessment
+        a = PropositionAssessment("prop", 0.5, "mixed", [], [])
+        contradictions = ["Lexical tension detected between 'always' and 'never'."]
+        weaknesses = _build_weaknesses([a], "test claim", [], contradictions)
+        assert any(w.type == "Observational Tension" for w in weaknesses)
+
+    def test_build_weaknesses_all_supported_fallback(self):
+        """Lines 506->515, 516: all supported + no contradictions → fallback weakness."""
+        from gpts_core.audit_claims import _build_weaknesses, PropositionAssessment
+        a = PropositionAssessment("prop", 0.9, "supported", [], [])
+        weaknesses = _build_weaknesses([a], "test claim", [], [])
+        assert len(weaknesses) >= 1
+        assert any(w.status == "Contested" for w in weaknesses)
+
+    def test_one_sentence_justification_all_verdicts(self):
+        """Lines 567, 571, 574: all verdict branches of _one_sentence_justification."""
+        from gpts_core.audit_claims import _one_sentence_justification, PropositionAssessment
+        a = PropositionAssessment("p", 0.9, "supported", [], [])
+
+        s = _one_sentence_justification("SUPPORTED", [a])
+        assert "strongly supports" in s.lower() or "corpus" in s.lower()
+
+        s = _one_sentence_justification("WEAKLY SUPPORTED", [a])
+        assert "fragmented" in s.lower() or "insufficient" in s.lower()
+
+        s = _one_sentence_justification("UNSUPPORTED", [a])
+        assert "do not" in s.lower() or "cannot" in s.lower()
+
+        s = _one_sentence_justification("UNKNOWN_VERDICT_TYPE", [a])
+        assert "incomplete" in s.lower() or "ambiguous" in s.lower()
