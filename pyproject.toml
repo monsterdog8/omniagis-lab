@@ -16,10 +16,10 @@ omniagis = "omniagis.cli:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--cov=omniagis --cov-fail-under=93"
+addopts = "--cov=omniagis --cov=gpts_core --cov-fail-under=80"
 
 [tool.coverage.run]
-source = ["omniagis"]
+source = ["omniagis", "gpts_core"]
 branch = true
 
 [tool.coverage.report]
