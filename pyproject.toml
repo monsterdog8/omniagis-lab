@@ -13,13 +13,14 @@ dependencies = ["numpy>=1.24.0"]
 
 [project.scripts]
 omniagis = "omniagis.cli:main"
+gpts-ultimate = "gpts_ultimate.cli:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--cov=omniagis --cov=gpts_core --cov=phase_omega --cov-fail-under=80"
+addopts = "--cov=omniagis --cov=gpts_core --cov=phase_omega --cov=gpts_ultimate --cov-fail-under=80"
 
 [tool.coverage.run]
-source = ["omniagis", "gpts_core", "phase_omega"]
+source = ["omniagis", "gpts_core", "phase_omega", "gpts_ultimate"]
 branch = true
 
 [tool.coverage.report]
@@ -29,4 +30,7 @@ exclude_lines = [
 ]
 
 [tool.setuptools.packages.find]
-where = ["src"]
+where = [".", "src"]
+
+[tool.setuptools.package-dir]
+"" = "."
