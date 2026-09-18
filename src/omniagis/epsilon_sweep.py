@@ -284,7 +284,7 @@ def _build_parser() -> argparse.ArgumentParser:
     return p
 
 
-def main(argv: Optional[list[str]] = None) -> None:
+def main(argv: Optional[list[str]] = None) -> int:
     args = _build_parser().parse_args(argv)
     params = SweepParams(
         z=args.z,
@@ -309,6 +309,8 @@ def main(argv: Optional[list[str]] = None) -> None:
     else:
         print(output_json)
 
+    return 0 if result["summary"]["n_fail_closed"] == 0 else 2
+
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

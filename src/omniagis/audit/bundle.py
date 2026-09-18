@@ -76,6 +76,8 @@ REASON_CHAIN_OK = "CHAIN_OK"
 REASON_CHAIN_NO_PREV = "CHAIN_NO_PREV"        # no predecessor declared (base)
 REASON_CHAIN_PREV_MISSING = "CHAIN_PREVIOUS_ARTIFACT_MISSING"
 REASON_CHAIN_HASH_MISMATCH = "CHAIN_HASH_MISMATCH"
+REASON_CHAIN_HASH_MISSING = "CHAIN_HASH_MISSING"
+REASON_CHAIN_HASH_WITHOUT_PREV = "CHAIN_HASH_WITHOUT_PREV"
 REASON_CHAIN_SKIPPED = "CHAIN_SKIPPED"        # artifact absent — chain not checked
 REASON_ARTIFACT_MISSING = "ARTIFACT_MISSING"  # declared artifact not found on disk
 
@@ -121,7 +123,12 @@ class ArtifactResult:
             return FAIL_CLOSED
         if self.hash_reason == REASON_HASH_INVALID:
             return FAIL_CLOSED
-        if self.chain_reason in (REASON_CHAIN_PREV_MISSING, REASON_CHAIN_HASH_MISMATCH):
+        if self.chain_reason in (
+            REASON_CHAIN_PREV_MISSING,
+            REASON_CHAIN_HASH_MISMATCH,
+            REASON_CHAIN_HASH_MISSING,
+            REASON_CHAIN_HASH_WITHOUT_PREV,
+        ):
             return FAIL_CLOSED
         # Present, no critical failure; PASS only when hash is explicitly verified
         if self.hash_reason == REASON_HASH_VALID and self.chain_reason in (
@@ -196,7 +203,12 @@ class BundleAuditReport:
                 reasons.append(REASON_ARTIFACT_MISSING)
             elif r.hash_reason == REASON_HASH_INVALID:
                 reasons.append(REASON_HASH_INVALID)
-            elif r.chain_reason in (REASON_CHAIN_PREV_MISSING, REASON_CHAIN_HASH_MISMATCH):
+            elif r.chain_reason in (
+                REASON_CHAIN_PREV_MISSING,
+                REASON_CHAIN_HASH_MISMATCH,
+                REASON_CHAIN_HASH_MISSING,
+                REASON_CHAIN_HASH_WITHOUT_PREV,
+            ):
                 reasons.append(r.chain_reason)
         seen: set[str] = set()
         deduped: list[str] = []
@@ -308,13 +320,17 @@ class BundleAuditor:
 
         # Chain check
         if spec.prev_artifact_path is None:
-            chain_reason = REASON_CHAIN_NO_PREV
+            chain_reason = (
+                REASON_CHAIN_HASH_WITHOUT_PREV
+                if spec.prev_artifact_sha256 is not None
+                else REASON_CHAIN_NO_PREV
+            )
         else:
             prev_resolved = _resolve(spec.prev_artifact_path, manifest_dir)
             if not os.path.isfile(prev_resolved):
                 chain_reason = REASON_CHAIN_PREV_MISSING
             elif spec.prev_artifact_sha256 is None:
-                chain_reason = REASON_CHAIN_OK
+                chain_reason = REASON_CHAIN_HASH_MISSING
             else:
                 prev_actual = _sha256_file(prev_resolved)
                 if prev_actual == spec.prev_artifact_sha256:
@@ -405,7 +421,10 @@ class BundleAuditor:
         missing = [r for r in report.results if not r.present]
         hash_fails = [r for r in report.results if r.hash_reason == REASON_HASH_INVALID]
         chain_fails = [r for r in report.results if r.chain_reason in (
-            REASON_CHAIN_PREV_MISSING, REASON_CHAIN_HASH_MISMATCH
+            REASON_CHAIN_PREV_MISSING,
+            REASON_CHAIN_HASH_MISMATCH,
+            REASON_CHAIN_HASH_MISSING,
+            REASON_CHAIN_HASH_WITHOUT_PREV,
         )]
 
         lines += [divider, "WEAKNESSES", thin]
