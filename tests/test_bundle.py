@@ -15,6 +15,8 @@ from omniagis.audit.bundle import (
     PASS,
     REASON_ARTIFACT_MISSING,
     REASON_CHAIN_HASH_MISMATCH,
+    REASON_CHAIN_HASH_MISSING,
+    REASON_CHAIN_HASH_WITHOUT_PREV,
     REASON_CHAIN_NO_PREV,
     REASON_CHAIN_OK,
     REASON_CHAIN_PREV_MISSING,
@@ -193,7 +195,8 @@ class TestChainCheck:
         })
         report = BundleAuditor().audit(str(mpath))
         r = report.results[0]
-        assert r.chain_reason == REASON_CHAIN_OK
+        assert r.chain_reason == REASON_CHAIN_HASH_MISSING
+        assert r.verdict == FAIL_CLOSED
         assert r.verdict == PASS
 
     def test_chain_prev_missing(self, tmp_path):
@@ -236,8 +239,8 @@ class TestChainCheck:
         assert r.chain_reason == REASON_CHAIN_HASH_MISMATCH
         assert r.verdict == FAIL_CLOSED
 
-    def test_chain_ok_without_prev_sha256(self, tmp_path):
-        """Chain link with prev_artifact_path but no sha256 → CHAIN_OK (presence only)."""
+    def test_chain_missing_prev_sha256_fails_closed(self, tmp_path):
+        """A declared predecessor must carry an integrity hash."""
         prev_content = b"prev"
         curr_content = b"curr"
         _write_artifact(tmp_path, "prev.json", prev_content)
