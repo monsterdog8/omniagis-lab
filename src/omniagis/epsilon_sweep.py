@@ -309,7 +309,7 @@ def main(argv: Optional[list[str]] = None) -> int:
     else:
         print(output_json)
 
-    return 0 if n_fail == 0 else 2
+    return 0 if result["summary"]["n_fail_closed"] == 0 else 2
 
 
 if __name__ == "__main__":
