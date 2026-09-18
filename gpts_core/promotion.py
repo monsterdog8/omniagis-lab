@@ -30,17 +30,21 @@ _BLOCKING_CEILINGS = ("LOCAL_ONLY", "LAB_ONLY", "DOCUMENTARY_ONLY",
                       "NOT_EXTERNAL_PROOF", "NOT_PRODUCTION")
 
 
+def _normalize_status(value: str) -> str:
+    return " ".join((value or "").upper().strip().split())
+
+
 def _token_match(value: str, tokens: Iterable[str]) -> bool:
-    v = (value or "").upper()
-    return any(tok in v for tok in tokens)
+    v = _normalize_status(value)
+    return any(v == _normalize_status(tok) for tok in tokens)
 
 
 def _is_promotion_candidate(row: Dict[str, str]) -> bool:
     verdict = (row.get("verdict") or "").upper()
     ceiling = (row.get("claim_ceiling") or "").upper()
-    if any(t in verdict for t in _BLOCKING_VERDICTS):
+    if any(verdict == _normalize_status(t) for t in _BLOCKING_VERDICTS):
         return False
-    if any(t in ceiling for t in _BLOCKING_CEILINGS):
+    if any(ceiling == _normalize_status(t) for t in _BLOCKING_CEILINGS):
         return False
     return all(_token_match(row.get(f, ""), tokens)
                for f, tokens in _REQUIRED_SIGNALS.items())
@@ -169,21 +173,29 @@ def validate_seal_ledger(ledger_path: Path, root: Path) -> Dict[str, Any]:
     Reads each line, re-checks SHA-256 and file size against the filesystem.
     """
     rows = []
-    for line in ledger_path.read_text(encoding="utf-8").splitlines():
-        if line.strip():
-            try:
-                rows.append(json.loads(line))
-            except json.JSONDecodeError:
-                pass
-
-    results = [validate_seal_record(r, root) for r in rows]
+    results = []
+    for lineno, line in enumerate(ledger_path.read_text(encoding="utf-8").splitlines(), 1):
+        if not line.strip():
+            continue
+        try:
+            row = json.loads(line)
+        except json.JSONDecodeError as exc:
+            results.append({
+                "event_id": "UNKNOWN",
+                "valid": False,
+                "errors": ["JSON_DECODE_ERROR"],
+                "line": lineno,
+                "detail": str(exc),
+            })
+            continue
+        results.append(validate_seal_record(row, root))
     pass_count = sum(1 for r in results if r["valid"])
     return {
         "ledger": str(ledger_path),
         "records": len(results),
         "pass_count": pass_count,
         "fail_count": len(results) - pass_count,
-        "all_valid": pass_count == len(results),
+        "all_valid": bool(results) and pass_count == len(results),
         "results": results,
         "claim_ceiling": "LOCAL_SHA256_CONTINUITY_ONLY_NOT_SUBJECTIVE_PROOF",
     }
@@ -238,14 +250,25 @@ def replay_jsonl_ledger(path: Path) -> Dict[str, Any]:
         if eid == "000001":
             if declared_parent is not None and declared_parent != "0" * 64:
                 return {"status": "FAIL", "reason": "GENESIS_PARENT_NOT_ZERO", "line": lineno}
-        elif declared_parent is not None and prev_hash is not None:
-            if declared_parent != prev_hash:
+        else:
+            if declared_parent is None:
+                return {"status": "FAIL", "reason": "MISSING_HASH_PARENT", "line": lineno}
+            if not isinstance(declared_parent, str) or len(declared_parent) != 64:
+                return {"status": "FAIL", "reason": "HASH_PARENT_MALFORMED", "line": lineno}
+            try:
+                int(declared_parent, 16)
+            except ValueError:
+                return {"status": "FAIL", "reason": "HASH_PARENT_MALFORMED", "line": lineno}
+            if prev_hash is not None and declared_parent != prev_hash:
                 return {"status": "FAIL", "reason": "HASH_PARENT_MISMATCH", "line": lineno}
 
         event_hash = _sha256(_canonical(obj))
         events.append({"event_id": eid, "type": obj["type"], "sha256": event_hash})
         prev_id = eid
         prev_hash = event_hash
+
+    if not events:
+        return {"status": "FAIL", "reason": "EMPTY_LEDGER", "path": str(path)}
 
     return {
         "status": "PASS",
