@@ -195,7 +195,7 @@ def _build_parser() -> argparse.ArgumentParser:
     return p
 
 
-def main(argv: Optional[list[str]] = None) -> None:
+def main(argv: Optional[list[str]] = None) -> int:
     args = _build_parser().parse_args(argv)
     params = ExperimentParams(
         z=args.z,
@@ -218,6 +218,8 @@ def main(argv: Optional[list[str]] = None) -> None:
     else:
         print(output_json)
 
+    return 0 if result["report"]["verdict"] == "ACCEPTED" else 2
+
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
