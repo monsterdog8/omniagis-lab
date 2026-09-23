@@ -11,6 +11,7 @@ import pytest
 from omniagis.epsilon_sweep import (
     SweepParams,
     run_epsilon_sweep,
+    main,
 )
 
 
@@ -399,3 +400,15 @@ class TestSweepIntegration:
         assert summary["n_accepted"] >= 0
         assert summary["n_fail_closed"] >= 0
         assert summary["n_accepted"] + summary["n_fail_closed"] == params.n_epsilons
+
+
+def test_cli_returns_nonzero_when_any_epsilon_fails(monkeypatch):
+    fake = {
+        "summary": {"n_accepted": 1, "n_fail_closed": 1},
+        "results": [
+            {"verdict": "ACCEPTED"},
+            {"verdict": "FAIL_CLOSED"},
+        ],
+    }
+    monkeypatch.setattr("omniagis.epsilon_sweep.run_epsilon_sweep", lambda params: fake)
+    assert main(["--n-epsilons", "2"]) == 2

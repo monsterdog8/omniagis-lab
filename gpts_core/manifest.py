@@ -116,7 +116,7 @@ def safe_extract_zip(zip_path: Path, dest: Path) -> List[str]:
             if name.startswith("/") or ".." in name:
                 continue
             target = dest / name
-            if not str(target.resolve()).startswith(str(dest.resolve())):
+            if not target.resolve().is_relative_to(dest.resolve()):
                 continue
             z.extract(member, dest)
             extracted.append(str(target))

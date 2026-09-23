@@ -51,6 +51,22 @@ class TestIsPromotionCandidate:
         row["replay_status"] = "UNKNOWN"
         assert _is_promotion_candidate(row) is False
 
+    @pytest.mark.parametrize("field,value", [
+        ("provenance_chain", "INCOMPLETE"),
+        ("dependency_resolution_status", "UNRESOLVED"),
+        ("raw_ledger_presence", "NOT_PRESENT_JSONL"),
+        ("replay_status", "NOT_REPLAY_PASS"),
+    ])
+    def test_negative_token_values_are_not_candidates(self, field, value):
+        row = _passing_row()
+        row[field] = value
+        assert _is_promotion_candidate(row) is False
+
+    def test_status_matching_allows_normalized_exact_values(self):
+        row = _passing_row()
+        row["provenance_chain"] = " complete "
+        assert _is_promotion_candidate(row) is True
+
     def test_lab_only_ceiling_blocked(self):
         row = _passing_row()
         row["claim_ceiling"] = "LAB_ONLY"
@@ -207,6 +223,32 @@ class TestValidateSealLedger:
         assert result["records"] == 3
         assert result["pass_count"] == 3
 
+    def test_empty_ledger_is_not_valid(self, tmp_path):
+        ledger = tmp_path / "seal.jsonl"
+        ledger.write_text("", encoding="utf-8")
+        result = validate_seal_ledger(ledger, tmp_path)
+        assert result["records"] == 0
+        assert result["all_valid"] is False
+
+    def test_malformed_line_is_counted_as_invalid(self, tmp_path):
+        ledger = tmp_path / "seal.jsonl"
+        ledger.write_text("{not json}\n", encoding="utf-8")
+        result = validate_seal_ledger(ledger, tmp_path)
+        assert result["records"] == 1
+        assert result["pass_count"] == 0
+        assert result["fail_count"] == 1
+        assert result["all_valid"] is False
+
+    def test_valid_then_malformed_line_fails(self, tmp_path):
+        entry = self._make_seal_entry(tmp_path, "a0.bin", b"ok")
+        ledger = tmp_path / "seal.jsonl"
+        ledger.write_text(json.dumps(entry) + "\n{not json}\n", encoding="utf-8")
+        result = validate_seal_ledger(ledger, tmp_path)
+        assert result["records"] == 2
+        assert result["pass_count"] == 1
+        assert result["fail_count"] == 1
+        assert result["all_valid"] is False
+
     def test_invalid_entry_counted(self, tmp_path):
         entry = self._make_seal_entry(tmp_path, "a0.bin", b"ok")
         entry["expected_sha256"] = "wrong"
@@ -240,6 +282,13 @@ class TestReplayJsonlLedger:
         assert result["status"] == "FAIL"
         assert result["reason"] == "FILE_NOT_FOUND"
 
+    def test_empty_ledger_fails(self, tmp_path):
+        f = tmp_path / "ledger.jsonl"
+        f.write_text("", encoding="utf-8")
+        result = replay_jsonl_ledger(f)
+        assert result["status"] == "FAIL"
+        assert result["reason"] == "EMPTY_LEDGER"
+
     def test_single_valid_event_no_chain(self, tmp_path):
         event = _make_event("000001")
         f = tmp_path / "ledger.jsonl"
@@ -247,6 +296,15 @@ class TestReplayJsonlLedger:
         result = replay_jsonl_ledger(f)
         assert result["status"] == "PASS"
         assert result["events_count"] == 1
+
+    def test_unlinked_non_genesis_event_fails(self, tmp_path):
+        e1 = _make_event("000001")
+        e2 = _make_event("000002")
+        f = tmp_path / "ledger.jsonl"
+        f.write_text(json.dumps(e1) + "\n" + json.dumps(e2), encoding="utf-8")
+        result = replay_jsonl_ledger(f)
+        assert result["status"] == "FAIL"
+        assert result["reason"] == "MISSING_HASH_PARENT"
 
     def test_two_events_valid_chain(self, tmp_path):
         e1 = _make_event("000001")

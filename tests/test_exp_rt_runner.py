@@ -14,6 +14,7 @@ from omniagis.exp_rt_runner import (
     generate_trajectory,
     pomeau_manneville_step,
     run_experiment,
+    main,
 )
 
 
@@ -329,3 +330,11 @@ class TestExperimentIntegration:
         assert "power_law" in diag
         assert "multi_scale_ci" in diag
         assert "plateau" in diag
+
+
+def test_cli_returns_nonzero_for_fail_closed(monkeypatch):
+    def fake_run_experiment(params):
+        return {"report": {"verdict": "FAIL_CLOSED"}}
+
+    monkeypatch.setattr("omniagis.exp_rt_runner.run_experiment", fake_run_experiment)
+    assert main(["--n-steps", "1"]) == 2

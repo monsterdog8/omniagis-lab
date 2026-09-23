@@ -198,3 +198,18 @@ class TestSafeExtractZip:
         dest = tmp_path / "extracted"
         extracted = safe_extract_zip(z, dest)
         assert extracted == []
+
+    def test_rejects_preexisting_destination_symlink(self, tmp_path):
+        z = tmp_path / "symlink.zip"
+        with zipfile.ZipFile(z, "w") as zf:
+            zf.writestr("jump/owned.txt", "evil")
+        dest = tmp_path / "extracted"
+        outside = tmp_path / "outside"
+        outside.mkdir()
+        dest.mkdir()
+        (dest / "jump").symlink_to(outside, target_is_directory=True)
+
+        extracted = safe_extract_zip(z, dest)
+
+        assert extracted == []
+        assert not (outside / "owned.txt").exists()
