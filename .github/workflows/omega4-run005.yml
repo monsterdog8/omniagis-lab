@@ -1,0 +1,84 @@
+name: omega4-run005-external-replication
+
+on:
+  push:
+    branches:
+      - omega4-run005-external-replication
+    paths:
+      - ".github/workflows/omega4-run005.yml"
+      - "experiments/omega4-run005/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  blinded-replication:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      PYTHONHASHSEED: "0"
+      INPUT_CAPSULE_SHA256: "125a44d5d275b5dbe64e2a8ba84d8064c4729312566fc408f86358aa328f1afe"
+    steps:
+      - name: Checkout blinded branch
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Reconstruct blinded input capsule
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd experiments/omega4-run005
+          cat input_parts/part_*.txt | tr -d '\n\r' | base64 -d > blinded_input.zip
+          echo "$INPUT_CAPSULE_SHA256  blinded_input.zip" | sha256sum -c -
+          mkdir external
+          unzip -q blinded_input.zip -d external
+
+      - name: Verify excluded RUN_004 outcome tables are absent
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd experiments/omega4-run005/external
+          forbidden='Ω4_RUN_004_STATISTICS.json Ω4_RUN_004_FAMILY_RESULTS.json Ω4_RUN_004_BIO_PROFILE.json Ω4_RUN_004_FINAL_REPORT.md Ω4_RUN_004_STREAM_METRICS.jsonl'
+          for f in $forbidden; do
+            if find . -name "$f" -print -quit | grep -q .; then
+              echo "BLINDING_FAIL: found forbidden $f" >&2
+              exit 7
+            fi
+          done
+
+      - name: Execute all 100 hidden streams
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd experiments/omega4-run005/external
+          python run005_external.py | tee run005_external_stdout.json
+
+      - name: Seal external results
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd experiments/omega4-run005/external
+          if [ -d run005_results ]; then
+            zip -qr ../OMEGA4_RUN_005_EXTERNAL_RESULTS.zip run005_results
+            sha256sum ../OMEGA4_RUN_005_EXTERNAL_RESULTS.zip > ../OMEGA4_RUN_005_EXTERNAL_RESULTS.zip.sha256
+          fi
+
+      - name: Upload fresh external replication artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: OMEGA4_RUN_005_EXTERNAL_RESULTS
+          path: |
+            experiments/omega4-run005/external/run005_results/**
+            experiments/omega4-run005/external/run005_external_stdout.json
+            experiments/omega4-run005/OMEGA4_RUN_005_EXTERNAL_RESULTS.zip
+            experiments/omega4-run005/OMEGA4_RUN_005_EXTERNAL_RESULTS.zip.sha256
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 6
