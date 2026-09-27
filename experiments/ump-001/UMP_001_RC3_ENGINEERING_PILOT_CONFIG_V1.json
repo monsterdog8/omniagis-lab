@@ -1,0 +1,53 @@
+{
+  "schema": "UMP_001_RC3_ENGINEERING_PILOT_CONFIG_V1",
+  "program": "UMP-001",
+  "child_binding": "GTAB_BIND_001",
+  "gtab_id": "GTAB_RC3_001",
+  "status": "BLOCKED_NOT_AUTHORIZED",
+  "purpose": "ENGINEERING_ONLY_NO_C2_OR_C4_CLAIM",
+  "parent_stage0_capsule_sha256": "3d000c5ec1ec27d1fde68fa528ac25e9d5c34b698e3cc7f684682cf180f3057c",
+  "parent_stage0_immutable": true,
+  "prerequisites": {
+    "observation_device": "TBD",
+    "observation_precision": "TBD",
+    "sampling_rate_hz": "TBD",
+    "measured_R_ohm": "TBD",
+    "measured_C_farad": "TBD",
+    "voltage_levels": [
+      "TBD",
+      "TBD",
+      "TBD"
+    ],
+    "D_primary": "TBD",
+    "DELTA_primary_seconds": "TBD",
+    "acquisition_path": "TBD",
+    "independent_postcommit_rng": "NOT_ESTABLISHED"
+  },
+  "pilot_design": {
+    "target_session_count_engineering_envelope": 40,
+    "statistical_role": "VARIANCE_AND_FAILURE_RATE_ESTIMATION_ONLY",
+    "confirmatory_reuse_forbidden": true,
+    "c2_matrix": "SET_AFTER_HARDWARE_TIMING_CHARACTERIZATION",
+    "c4_primary_design": "ONE_DSTAR_ONE_DELTASTAR_ONLY",
+    "c4_primary_endpoint": "PROPER_SCORE_SKILL_VS_EXACT_UNIFORM_THREE_STATE_NULL",
+    "c4_secondary_endpoint": "OMEGA_U",
+    "optional_stopping": false,
+    "preserve_all_trials": true,
+    "failed_trial_policy": "PRESERVE_AND_CLASSIFY_NO_SILENT_DELETION"
+  },
+  "readiness_rule": {
+    "pilot_authorized": false,
+    "requires": [
+      "REAL_GTAB_DEVICE_BOUND",
+      "OBSERVATION_DEVICE_BOUND",
+      "PRECISION_CALIBRATED",
+      "SAMPLING_RATE_MEASURED",
+      "R_AND_C_MEASURED",
+      "VOLTAGE_LEVELS_BOUNDED",
+      "DSTAR_FROZEN",
+      "DELTASTAR_FROZEN",
+      "ACQUISITION_PATH_VERIFIED"
+    ]
+  },
+  "claim_ceiling": "ENGINEERING_PILOT_CONFIG_ONLY"
+}
