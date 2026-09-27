@@ -1,7 +1,7 @@
 {
-  "schema": "UMP_001_HANGAR_SYNC_V1",
+  "schema": "UMP_001_HANGAR_SYNC_V2",
   "program": "UMP-001",
-  "sync_id": "HANGAR_SYNC_001",
+  "sync_id": "HANGAR_SYNC_002",
   "parent_stage0": {
     "branch": "ump-001-stage0-freeze",
     "commit": "b91e808a76284828ded87e383febc16c6a01ac27",
@@ -9,55 +9,53 @@
     "immutable": true
   },
   "github_layer": {
-    "status": "PATCH_FORWARD_CHILD_CREATED",
-    "gtab_binding_path": "experiments/ump-001/GTAB_BIND_001.json",
-    "gtab_binding_commit": "5604417c3ecf8db9eabd5b64845f52acf3b8cb50",
-    "binding_state": "PROPOSED_NOT_EXECUTED"
+    "child_branch": "ump-001-gtab-bind-001",
+    "tested_commit": "82ad3942c539cc1c33ab9a1d341747905022070b",
+    "workflow_run": 36286602001,
+    "runtime": "CPython 3.13.15",
+    "conclusion": "SUCCESS",
+    "tests": "22/22 PASS",
+    "structural_validation": "PASS",
+    "ch_scanner": {
+      "executed_structural": 3,
+      "mandatory_not_executed": 23,
+      "aggregate_pass": "FORBIDDEN"
+    },
+    "reality_preflight": "BLOCKED_REQUIRED_MEASUREMENT",
+    "power_plan": "BLOCKED_MISSING_PILOT_SD_AND_EPSILON"
   },
   "outside_agent_layer": {
     "agent_id": "df5d0695-dc6a-498d-aa0f-f89de6559e56",
     "agent_name": "MONSTERDOG Ω∞ — MASTER CHAT KER ORCHESTRATOR 001",
     "status": "DRAFT_PATCHED_NOT_PUBLISHED",
-    "new_behavior_intents": [
+    "ump_behavior_intents": [
       "UMP-001",
       "UMP-002",
       "UMP-003",
       "UMP-004",
       "UMP-005"
     ],
-    "knowledge_sources_ready": 5,
-    "knowledge_titles": [
-      "UMP-001 Stage0 canonical status",
-      "UMP-001 C2 versus C4 contract",
-      "UMP-001 proper-score primary endpoint",
-      "GTAB_BIND_001 proposed RC3 child binding",
-      "UMP-001 anomaly and replication doctrine"
-    ],
-    "knowledge_base_total_ready": 10,
-    "lint": "PASS_VALID_TRUE",
+    "knowledge_base": {
+      "ready": 11,
+      "total": 11,
+      "failed": 0
+    },
     "simulate_build_summary": {
-      "scenario_count": 0,
-      "failures": 0,
-      "intents_without_scenario": 14
+      "scenario_count": 5,
+      "replied_count": 5,
+      "failures": 0
     },
-    "try_agent": {
-      "produced_types": [
-        "MessageReceived",
-        "MessageGenerated",
-        "MessageSent"
-      ],
-      "failures": 0,
-      "fidelity_note": "MOCKED_STANDIN_NOT_LIVE_MODEL_VERDICT"
+    "capability_evals": {
+      "ump_linked_authored": 5,
+      "live_execution": "BLOCKED_INSUFFICIENT_CREATOR_CREDITS"
     },
-    "review_agent": "BLOCKED_INSUFFICIENT_CREATOR_CREDITS",
     "publish": "NOT_ATTEMPTED"
   },
   "buildy_layer": {
-    "status": "BLOCKED_PLUGIN_INTERNAL_ERROR",
-    "list_apps_attempts": 2,
-    "create_app_attempts": 1,
+    "latest_observation": "TOOL_INTERNAL_ERROR_ON_LIST_APPS",
     "persistent_app_created": false,
-    "note": "No Buildy state or app was fabricated. GitHub remains the external canonical patch-forward registry for this sync."
+    "status": "BLOCKED_TOOL_ERROR",
+    "claim": "NO_BUILDY_PERSISTENCE_ESTABLISHED"
   },
   "methodological_sync": {
     "C2": "D_X_DELTA_NATURAL_WORLD_MODEL_TEST",
@@ -82,6 +80,6 @@
     "EMPIRICAL_C4_EVIDENCE": 0,
     "OMEGA_U": "NOT_MEASURED"
   },
-  "next_gate": "GTAB_RC3_001_REAL_HARDWARE_BIND_AND_ENGINEERING_PILOT_PREPARATION",
+  "next_gate": "GTAB_RC3_001_REAL_HARDWARE_BIND",
   "claim_ceiling": "BINDING_SPEC_AND_HANGAR_INTEGRATION_ONLY"
 }
