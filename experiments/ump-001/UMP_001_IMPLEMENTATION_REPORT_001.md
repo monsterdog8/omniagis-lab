@@ -1,13 +1,18 @@
 # UMP-001 — IMPLEMENTATION REPORT 001
 
 ## Scope
-Patch-forward implementation only. Stage0 remains immutable. No real GTAB trial was executed.
+Patch-forward implementation only. Stage0 remains immutable. No real GTAB trial was executed. The Stage0 branch pointer has been restored to the frozen Stage0 commit; all child work now lives on a separate child branch.
 
 ## Parent binding
 - Stage0 capsule SHA-256: `3d000c5ec1ec27d1fde68fa528ac25e9d5c34b698e3cc7f684682cf180f3057c`
 - Stage0 external preservation commit: `b91e808a76284828ded87e383febc16c6a01ac27`
 - Claim ceiling: `STAGE0_PROTOCOL_FREEZE_ONLY`
 - RFC3161: `NOT_OBTAINED`
+
+## Branch topology
+- Frozen parent branch: `ump-001-stage0-freeze` → `b91e808a76284828ded87e383febc16c6a01ac27`
+- Patch-forward child branch: `ump-001-gtab-bind-001`
+- Stage0 bytes/commit were not rewritten.
 
 ## Child artifacts implemented
 - `GTAB_BIND_001.json` — `GTAB_RC3_001`, status `PROPOSED_NOT_EXECUTED`
@@ -30,7 +35,8 @@ Secondary: `OMEGA_U`.
 
 ## GitHub Actions execution receipt
 Workflow run: `36284553623`
-Head commit: `d17df7181fe89005e103dc2876b4e07c7dc86757`
+Validated CI head: `d17df7181fe89005e103dc2876b4e07c7dc86757`
+Child branch retarget commit: `d8b6be1e30889b47ab73b741c8f950dd37754382`
 Runtime: CPython 3.13.15
 Conclusion: `SUCCESS`
 
