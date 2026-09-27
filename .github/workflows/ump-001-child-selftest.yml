@@ -28,4 +28,4 @@ jobs:
           test -f experiments/ump-001/UMP_001_STAGE0_EXTERNAL_HASH_RECEIPT.txt
           grep -F "CAPSULE_SHA256=3d000c5ec1ec27d1fde68fa528ac25e9d5c34b698e3cc7f684682cf180f3057c" experiments/ump-001/UMP_001_STAGE0_EXTERNAL_HASH_RECEIPT.txt
       - name: Run child selftests
-        run: python -m unittest -v experiments.ump-001.tests.test_ump_rc3_core
+        run: python experiments/ump-001/tests/test_ump_rc3_core.py
