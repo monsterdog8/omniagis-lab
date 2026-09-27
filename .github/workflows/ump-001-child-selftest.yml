@@ -2,7 +2,7 @@ name: UMP-001 child selftest
 on:
   push:
     branches:
-      - ump-001-stage0-freeze
+      - ump-001-gtab-bind-001
     paths:
       - "experiments/ump-001/**"
       - ".github/workflows/ump-001-child-selftest.yml"
