@@ -1,0 +1,270 @@
+{
+  "schema": "UMP_001_RC3_THREAT_MATRIX_V1",
+  "program": "UMP-001",
+  "parent_stage0_capsule_sha256": "3d000c5ec1ec27d1fde68fa528ac25e9d5c34b698e3cc7f684682cf180f3057c",
+  "status": "STRUCTURAL_SCAN_READY_REAL_ATTACKS_NOT_EXECUTED",
+  "attacks": [
+    {
+      "CH_ID": "CH-00",
+      "ATTACK": "NO_RAW",
+      "APPLICABLE": true,
+      "EXECUTED": false,
+      "OBSERVATION": "NO_REAL_GTAB_DATA",
+      "STATUS": "NOT_EXECUTED",
+      "EVIDENCE": "NONE_REAL",
+      "NEXT_TEST": "RUN_WHEN_REQUIRED_INPUTS_EXIST"
+    },
+    {
+      "CH_ID": "CH-01",
+      "ATTACK": "RANDOM_NOISE",
+      "APPLICABLE": true,
+      "EXECUTED": false,
+      "OBSERVATION": "NO_REAL_GTAB_DATA",
+      "STATUS": "NOT_EXECUTED",
+      "EVIDENCE": "NONE_REAL",
+      "NEXT_TEST": "RUN_WHEN_REQUIRED_INPUTS_EXIST"
+    },
+    {
+      "CH_ID": "CH-02",
+      "ATTACK": "SELECTION_BIAS",
+      "APPLICABLE": true,
+      "EXECUTED": false,
+      "OBSERVATION": "NO_REAL_GTAB_DATA",
+      "STATUS": "NOT_EXECUTED",
+      "EVIDENCE": "NONE_REAL",
+      "NEXT_TEST": "RUN_WHEN_REQUIRED_INPUTS_EXIST"
+    },
+    {
+      "CH_ID": "CH-03",
+      "ATTACK": "PROMPT_ECHO",
+      "APPLICABLE": true,
+      "EXECUTED": false,
+      "OBSERVATION": "NO_REAL_GTAB_DATA",
+      "STATUS": "NOT_EXECUTED",
+      "EVIDENCE": "NONE_REAL",
+      "NEXT_TEST": "RUN_WHEN_REQUIRED_INPUTS_EXIST"
+    },
+    {
+      "CH_ID": "CH-04",
+      "ATTACK": "SEMANTIC_OVERLAY",
+      "APPLICABLE": true,
+      "EXECUTED": false,
+      "OBSERVATION": "NO_REAL_GTAB_DATA",
+      "STATUS": "NOT_EXECUTED",
+      "EVIDENCE": "NONE_REAL",
+      "NEXT_TEST": "RUN_WHEN_REQUIRED_INPUTS_EXIST"
+    },
+    {
+      "CH_ID": "CH-05",
+      "ATTACK": "METRIC_IDENTITY",
+      "APPLICABLE": true,
+      "EXECUTED": false,
+      "OBSERVATION": "NO_REAL_GTAB_DATA",
+      "STATUS": "NOT_EXECUTED",
+      "EVIDENCE": "NONE_REAL",
+      "NEXT_TEST": "RUN_WHEN_REQUIRED_INPUTS_EXIST"
+    },
+    {
+      "CH_ID": "CH-06",
+      "ATTACK": "VISUAL_OVERINTERPRETATION",
+      "APPLICABLE": true,
+      "EXECUTED": false,
+      "OBSERVATION": "NO_REAL_GTAB_DATA",
+      "STATUS": "NOT_EXECUTED",
+      "EVIDENCE": "NONE_REAL",
+      "NEXT_TEST": "RUN_WHEN_REQUIRED_INPUTS_EXIST"
+    },
+    {
+      "CH_ID": "CH-07",
+      "ATTACK": "COMPRESSION_ARTIFACT",
+      "APPLICABLE": true,
+      "EXECUTED": false,
+      "OBSERVATION": "NO_REAL_GTAB_DATA",
+      "STATUS": "NOT_EXECUTED",
+      "EVIDENCE": "NONE_REAL",
+      "NEXT_TEST": "RUN_WHEN_REQUIRED_INPUTS_EXIST"
+    },
+    {
+      "CH_ID": "CH-08",
+      "ATTACK": "HASH_CONFUSION",
+      "APPLICABLE": true,
+      "EXECUTED": false,
+      "OBSERVATION": "NO_REAL_GTAB_DATA",
+      "STATUS": "NOT_EXECUTED",
+      "EVIDENCE": "NONE_REAL",
+      "NEXT_TEST": "RUN_WHEN_REQUIRED_INPUTS_EXIST"
+    },
+    {
+      "CH_ID": "CH-09",
+      "ATTACK": "TRANSCRIPT_ONLY",
+      "APPLICABLE": true,
+      "EXECUTED": false,
+      "OBSERVATION": "NO_REAL_GTAB_DATA",
+      "STATUS": "NOT_EXECUTED",
+      "EVIDENCE": "NONE_REAL",
+      "NEXT_TEST": "RUN_WHEN_REQUIRED_INPUTS_EXIST"
+    },
+    {
+      "CH_ID": "CH-10",
+      "ATTACK": "PARSER_FAILURE",
+      "APPLICABLE": true,
+      "EXECUTED": false,
+      "OBSERVATION": "NO_REAL_GTAB_DATA",
+      "STATUS": "NOT_EXECUTED",
+      "EVIDENCE": "NONE_REAL",
+      "NEXT_TEST": "RUN_WHEN_REQUIRED_INPUTS_EXIST"
+    },
+    {
+      "CH_ID": "CH-11",
+      "ATTACK": "RUBRIC_DRIFT",
+      "APPLICABLE": true,
+      "EXECUTED": false,
+      "OBSERVATION": "NO_REAL_GTAB_DATA",
+      "STATUS": "NOT_EXECUTED",
+      "EVIDENCE": "NONE_REAL",
+      "NEXT_TEST": "RUN_WHEN_REQUIRED_INPUTS_EXIST"
+    },
+    {
+      "CH_ID": "CH-12",
+      "ATTACK": "REPLAY_FAILURE",
+      "APPLICABLE": true,
+      "EXECUTED": false,
+      "OBSERVATION": "NO_REAL_GTAB_DATA",
+      "STATUS": "NOT_EXECUTED",
+      "EVIDENCE": "NONE_REAL",
+      "NEXT_TEST": "RUN_WHEN_REQUIRED_INPUTS_EXIST"
+    },
+    {
+      "CH_ID": "CH-13",
+      "ATTACK": "NULL_MODEL_WEAKNESS",
+      "APPLICABLE": true,
+      "EXECUTED": false,
+      "OBSERVATION": "NO_REAL_GTAB_DATA",
+      "STATUS": "NOT_EXECUTED",
+      "EVIDENCE": "NONE_REAL",
+      "NEXT_TEST": "RUN_WHEN_REQUIRED_INPUTS_EXIST"
+    },
+    {
+      "CH_ID": "CH-14",
+      "ATTACK": "PHASE_SURROGATE_FAIL",
+      "APPLICABLE": true,
+      "EXECUTED": false,
+      "OBSERVATION": "NO_REAL_GTAB_DATA",
+      "STATUS": "NOT_EXECUTED",
+      "EVIDENCE": "NONE_REAL",
+      "NEXT_TEST": "RUN_WHEN_REQUIRED_INPUTS_EXIST"
+    },
+    {
+      "CH_ID": "CH-15",
+      "ATTACK": "BOOTSTRAP_INSTABILITY",
+      "APPLICABLE": true,
+      "EXECUTED": false,
+      "OBSERVATION": "NO_REAL_GTAB_DATA",
+      "STATUS": "NOT_EXECUTED",
+      "EVIDENCE": "NONE_REAL",
+      "NEXT_TEST": "RUN_WHEN_REQUIRED_INPUTS_EXIST"
+    },
+    {
+      "CH_ID": "CH-16",
+      "ATTACK": "LOFO_DEPENDENCY",
+      "APPLICABLE": true,
+      "EXECUTED": false,
+      "OBSERVATION": "NO_REAL_GTAB_DATA",
+      "STATUS": "NOT_EXECUTED",
+      "EVIDENCE": "NONE_REAL",
+      "NEXT_TEST": "RUN_WHEN_REQUIRED_INPUTS_EXIST"
+    },
+    {
+      "CH_ID": "CH-17",
+      "ATTACK": "LEAKAGE",
+      "APPLICABLE": true,
+      "EXECUTED": false,
+      "OBSERVATION": "NO_REAL_GTAB_DATA",
+      "STATUS": "NOT_EXECUTED",
+      "EVIDENCE": "NONE_REAL",
+      "NEXT_TEST": "RUN_WHEN_REQUIRED_INPUTS_EXIST"
+    },
+    {
+      "CH_ID": "CH-18",
+      "ATTACK": "TOO_PERFECT",
+      "APPLICABLE": true,
+      "EXECUTED": false,
+      "OBSERVATION": "NO_REAL_GTAB_DATA",
+      "STATUS": "NOT_EXECUTED",
+      "EVIDENCE": "NONE_REAL",
+      "NEXT_TEST": "RUN_WHEN_REQUIRED_INPUTS_EXIST"
+    },
+    {
+      "CH_ID": "CH-19",
+      "ATTACK": "TIME_DRIFT",
+      "APPLICABLE": true,
+      "EXECUTED": false,
+      "OBSERVATION": "NO_REAL_GTAB_DATA",
+      "STATUS": "NOT_EXECUTED",
+      "EVIDENCE": "NONE_REAL",
+      "NEXT_TEST": "RUN_WHEN_REQUIRED_INPUTS_EXIST"
+    },
+    {
+      "CH_ID": "CH-20",
+      "ATTACK": "VERSION_DRIFT",
+      "APPLICABLE": true,
+      "EXECUTED": false,
+      "OBSERVATION": "NO_REAL_GTAB_DATA",
+      "STATUS": "NOT_EXECUTED",
+      "EVIDENCE": "NONE_REAL",
+      "NEXT_TEST": "RUN_WHEN_REQUIRED_INPUTS_EXIST"
+    },
+    {
+      "CH_ID": "CH-21",
+      "ATTACK": "SECRET_RISK",
+      "APPLICABLE": true,
+      "EXECUTED": false,
+      "OBSERVATION": "NO_REAL_GTAB_DATA",
+      "STATUS": "NOT_EXECUTED",
+      "EVIDENCE": "NONE_REAL",
+      "NEXT_TEST": "RUN_WHEN_REQUIRED_INPUTS_EXIST"
+    },
+    {
+      "CH_ID": "CH-22",
+      "ATTACK": "CLAIM_OVERREACH",
+      "APPLICABLE": true,
+      "EXECUTED": false,
+      "OBSERVATION": "NO_REAL_GTAB_DATA",
+      "STATUS": "NOT_EXECUTED",
+      "EVIDENCE": "NONE_REAL",
+      "NEXT_TEST": "RUN_WHEN_REQUIRED_INPUTS_EXIST"
+    },
+    {
+      "CH_ID": "CH-23",
+      "ATTACK": "BENCHMARK_MISREAD",
+      "APPLICABLE": true,
+      "EXECUTED": false,
+      "OBSERVATION": "NO_REAL_GTAB_DATA",
+      "STATUS": "NOT_EXECUTED",
+      "EVIDENCE": "NONE_REAL",
+      "NEXT_TEST": "RUN_WHEN_REQUIRED_INPUTS_EXIST"
+    },
+    {
+      "CH_ID": "CH-24",
+      "ATTACK": "PRODUCTION_MISREAD",
+      "APPLICABLE": true,
+      "EXECUTED": false,
+      "OBSERVATION": "NO_REAL_GTAB_DATA",
+      "STATUS": "NOT_EXECUTED",
+      "EVIDENCE": "NONE_REAL",
+      "NEXT_TEST": "RUN_WHEN_REQUIRED_INPUTS_EXIST"
+    },
+    {
+      "CH_ID": "CH-25",
+      "ATTACK": "CONSCIOUSNESS_OVERCLAIM",
+      "APPLICABLE": true,
+      "EXECUTED": false,
+      "OBSERVATION": "NO_REAL_GTAB_DATA",
+      "STATUS": "NOT_EXECUTED",
+      "EVIDENCE": "NONE_REAL",
+      "NEXT_TEST": "RUN_WHEN_REQUIRED_INPUTS_EXIST"
+    }
+  ],
+  "aggregate_pass_forbidden_if_mandatory_not_executed": true,
+  "claim_ceiling": "THREAT_MATRIX_DESIGN_ONLY"
+}
