@@ -1,0 +1,27 @@
+{
+  "schema": "UMP_001_RC3_CALIBRATION_RECEIPT_V1",
+  "program": "UMP-001",
+  "gtab_id": "GTAB_RC3_001",
+  "parent_stage0_capsule_sha256": "3d000c5ec1ec27d1fde68fa528ac25e9d5c34b698e3cc7f684682cf180f3057c",
+  "status": "NOT_EXECUTED_BLOCKED_HARDWARE",
+  "measurements": {
+    "R_measured": "NOT_MEASURED",
+    "C_measured": "NOT_MEASURED",
+    "tau_physical": "NOT_COMPUTABLE",
+    "tau_fit": "NOT_COMPUTABLE",
+    "abs_tau_error": "NOT_COMPUTABLE",
+    "relative_tau_error": "NOT_COMPUTABLE",
+    "observation_resolution": "NOT_MEASURED",
+    "noise_floor": "NOT_MEASURED",
+    "sample_jitter": "NOT_MEASURED",
+    "clock_jitter": "NOT_MEASURED",
+    "switching_latency": "NOT_MEASURED",
+    "reset_latency": "NOT_MEASURED",
+    "steady_state_tolerance": "NOT_MEASURED",
+    "temperature": "NOT_MEASURED",
+    "missing_sample_rate": "NOT_MEASURED",
+    "sensor_saturation_rate": "NOT_MEASURED"
+  },
+  "rule": "NO_C2_RUN_UNTIL_INSTRUMENTATION_STABLE_FOR_FROZEN_DELTA",
+  "claim_ceiling": "CALIBRATION_SCHEMA_ONLY"
+}
