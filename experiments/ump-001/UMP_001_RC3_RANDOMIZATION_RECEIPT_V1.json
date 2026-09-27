@@ -1,0 +1,13 @@
+{
+  "schema": "UMP_001_RC3_RANDOMIZATION_RECEIPT_V1",
+  "program": "UMP-001",
+  "parent_stage0_capsule_sha256": "3d000c5ec1ec27d1fde68fa528ac25e9d5c34b698e3cc7f684682cf180f3057c",
+  "status": "SOFTWARE_PRIMITIVES_IMPLEMENTED_REAL_ASSIGNMENT_NOT_EXECUTED",
+  "modulo3_rule": "REJECT_UINT256_2_POW_256_MINUS_1_THEN_MOD_3",
+  "local_ordering_mechanism": "TESTABLE_IN_SOFTWARE",
+  "separate_host_csprng": "NOT_EXECUTED",
+  "future_external_random_value": "NOT_ACQUIRED",
+  "postcommit_physical_independence": "NOT_PROVEN",
+  "assignment_receipt": "NOT_CREATED",
+  "claim_ceiling": "RANDOMIZATION_SOFTWARE_ONLY"
+}
