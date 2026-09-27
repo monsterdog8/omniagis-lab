@@ -1,0 +1,25 @@
+{
+  "schema": "UMP_001_RC3_PILOT_PREREGISTRATION_V1",
+  "program": "UMP-001",
+  "gtab_id": "GTAB_RC3_001",
+  "parent_stage0_capsule_sha256": "3d000c5ec1ec27d1fde68fa528ac25e9d5c34b698e3cc7f684682cf180f3057c",
+  "status": "BLOCKED_NOT_AUTHORIZED",
+  "purpose": "ENGINEERING_ONLY_NO_C2_OR_C4_PROMOTION",
+  "target_sessions_approx": 40,
+  "confirmatory_reuse_forbidden": true,
+  "purposes": [
+    "VERIFY_ACQUISITION",
+    "MEASURE_INTERVENTION_TIMING",
+    "ESTIMATE_FAILURE_RATE",
+    "ESTIMATE_NOISE",
+    "ESTIMATE_PRIMARY_SCORE_VARIANCE",
+    "VERIFY_SHAM",
+    "VERIFY_RESET",
+    "VERIFY_RANDOMIZATION_ORDER",
+    "MEASURE_LEAKAGE_CONTROLS",
+    "PROPOSE_PRACTICAL_EPSILON"
+  ],
+  "stop_rule": "COMPLETE_PREREGISTERED_ENGINEERING_ENVELOPE_OR_DECLARED_TECHNICAL_FAILURE; NO_OPTIONAL_STOPPING_FOR_EFFECT",
+  "pilot_authorized": false,
+  "claim_ceiling": "PILOT_PREREGISTRATION_ONLY"
+}
