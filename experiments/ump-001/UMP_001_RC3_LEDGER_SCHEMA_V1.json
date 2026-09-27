@@ -1,0 +1,55 @@
+{
+  "schema": "UMP_001_RC3_LEDGER_SCHEMA_V1",
+  "program": "UMP-001",
+  "parent_stage0_capsule_sha256": "3d000c5ec1ec27d1fde68fa528ac25e9d5c34b698e3cc7f684682cf180f3057c",
+  "common_required": [
+    "schema",
+    "seq",
+    "trial_id",
+    "event",
+    "wall_time_utc",
+    "monotonic_ns",
+    "actor",
+    "prev_entry_sha256",
+    "payload_sha256"
+  ],
+  "ledgers": {
+    "prediction": {
+      "file": "UMP_001_PREDICTION_LEDGER.jsonl",
+      "extra_required": [
+        "prediction_id",
+        "depth_id",
+        "horizon_id",
+        "prediction_distribution",
+        "baseline",
+        "status"
+      ]
+    },
+    "reality": {
+      "file": "UMP_001_REALITY_LEDGER.jsonl",
+      "extra_required": [
+        "raw_sensor_artifact_sha256",
+        "intervention_assignment",
+        "sensor_health",
+        "ground_truth_authority"
+      ]
+    },
+    "commitment": {
+      "file": "UMP_001_COMMITMENTS.jsonl",
+      "extra_required": [
+        "commitment_sha256"
+      ]
+    },
+    "reveal": {
+      "file": "UMP_001_REVEALS.jsonl",
+      "extra_required": [
+        "canonical_payload",
+        "nonce",
+        "verification_result"
+      ]
+    }
+  },
+  "chain_rule": "ENTRY_HASH_BINDS_CANONICAL_ROW_EXCLUDING_ENTRY_HASH_AND_INCLUDES_PREV_ENTRY_SHA256",
+  "immutable_after_close": true,
+  "claim_ceiling": "LEDGER_SCHEMA_ONLY"
+}
