@@ -1,0 +1,92 @@
+{
+  "schema": "UMP_001_RC3_CHANNEL_AUDIT_V1",
+  "program": "UMP-001",
+  "parent_stage0_capsule_sha256": "3d000c5ec1ec27d1fde68fa528ac25e9d5c34b698e3cc7f684682cf180f3057c",
+  "status": "DESIGNED_NOT_EXECUTED_REAL",
+  "leakage_canary_required": true,
+  "stages": [
+    {
+      "id": "E0_ALL_NORMAL_CHANNELS",
+      "designed": true,
+      "implemented": false,
+      "observed": false,
+      "verified": false,
+      "status": "NOT_EXECUTED",
+      "residual_uncertainty": "HIGH"
+    },
+    {
+      "id": "E1_NETWORK_REMOVED",
+      "designed": true,
+      "implemented": false,
+      "observed": false,
+      "verified": false,
+      "status": "NOT_EXECUTED",
+      "residual_uncertainty": "HIGH"
+    },
+    {
+      "id": "E2_GTAB_FEEDS_REMOVED",
+      "designed": true,
+      "implemented": false,
+      "observed": false,
+      "verified": false,
+      "status": "NOT_EXECUTED",
+      "residual_uncertainty": "HIGH"
+    },
+    {
+      "id": "E3_MODEL_WALL_CLOCK_REMOVED",
+      "designed": true,
+      "implemented": false,
+      "observed": false,
+      "verified": false,
+      "status": "NOT_EXECUTED",
+      "residual_uncertainty": "HIGH"
+    },
+    {
+      "id": "E4_MUTABLE_FILES_CACHE_METADATA_REMOVED",
+      "designed": true,
+      "implemented": false,
+      "observed": false,
+      "verified": false,
+      "status": "NOT_EXECUTED",
+      "residual_uncertainty": "HIGH"
+    },
+    {
+      "id": "E5_HUMAN_FEEDBACK_REMOVED",
+      "designed": true,
+      "implemented": false,
+      "observed": false,
+      "verified": false,
+      "status": "NOT_EXECUTED",
+      "residual_uncertainty": "HIGH"
+    },
+    {
+      "id": "E6_SHARED_RANDOMNESS_REMOVED",
+      "designed": true,
+      "implemented": false,
+      "observed": false,
+      "verified": false,
+      "status": "NOT_EXECUTED",
+      "residual_uncertainty": "HIGH"
+    },
+    {
+      "id": "E7_PROVIDER_RUNTIME_AMBIGUITY_REMOVED",
+      "designed": true,
+      "implemented": false,
+      "observed": false,
+      "verified": false,
+      "status": "NOT_EXECUTED",
+      "residual_uncertainty": "HIGH"
+    },
+    {
+      "id": "E8_POSTCOMMIT_ASSIGNMENT",
+      "designed": true,
+      "implemented": false,
+      "observed": false,
+      "verified": false,
+      "status": "NOT_EXECUTED",
+      "residual_uncertainty": "HIGH"
+    }
+  ],
+  "rule": "NO_CHANNEL_CLOSED_CLAIM_WITHOUT_IMPLEMENTED_PLUS_OBSERVED_PLUS_VERIFIED",
+  "claim_ceiling": "CHANNEL_AUDIT_DESIGN_ONLY"
+}
