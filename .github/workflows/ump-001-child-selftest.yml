@@ -27,5 +27,14 @@ jobs:
           set -euo pipefail
           test -f experiments/ump-001/UMP_001_STAGE0_EXTERNAL_HASH_RECEIPT.txt
           grep -F "CAPSULE_SHA256=3d000c5ec1ec27d1fde68fa528ac25e9d5c34b698e3cc7f684682cf180f3057c" experiments/ump-001/UMP_001_STAGE0_EXTERNAL_HASH_RECEIPT.txt
-      - name: Run child selftests
+      - name: Run RC3 computation and commitment selftests
         run: python experiments/ump-001/tests/test_ump_rc3_core.py
+      - name: Validate patch-forward child invariants
+        run: python experiments/ump-001/validate_ump_child.py
+      - name: Verify power planner remains fail-closed without pilot data
+        shell: bash
+        run: |
+          set -euo pipefail
+          python experiments/ump-001/ump_rc3_power_plan.py > /tmp/power.json
+          grep -F '"status": "BLOCKED_MISSING_PILOT_SD_AND_EPSILON"' /tmp/power.json
+          grep -F '"canonical_confirmatory_N": "NOT_COMPUTED"' /tmp/power.json
