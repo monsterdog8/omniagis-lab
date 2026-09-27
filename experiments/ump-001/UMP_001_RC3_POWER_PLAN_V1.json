@@ -1,0 +1,15 @@
+{
+  "schema": "UMP_001_RC3_POWER_PLAN_V1",
+  "program": "UMP-001",
+  "parent_stage0_capsule_sha256": "3d000c5ec1ec27d1fde68fa528ac25e9d5c34b698e3cc7f684682cf180f3057c",
+  "primary_endpoint": "PAIRED_PROPER_SCORE_SKILL_VS_EXACT_RANDOMIZED_NULL",
+  "statistical_unit": "INDEPENDENT_TRIAL_OR_SESSION_BLOCK",
+  "alpha_candidate": 0.01,
+  "target_power_candidate": 0.9,
+  "pilot_sd": "TBD",
+  "epsilon": "TBD",
+  "canonical_confirmatory_N": "NOT_COMPUTED",
+  "status": "BLOCKED_MISSING_PILOT_SD_AND_EPSILON",
+  "optional_stopping": false,
+  "claim_ceiling": "POWER_PLAN_SPEC_ONLY"
+}
