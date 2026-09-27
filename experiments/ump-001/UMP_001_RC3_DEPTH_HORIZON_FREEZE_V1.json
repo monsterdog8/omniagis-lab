@@ -1,0 +1,19 @@
+{
+  "schema": "UMP_001_RC3_DEPTH_HORIZON_FREEZE_V1",
+  "program": "UMP-001",
+  "parent_stage0_capsule_sha256": "3d000c5ec1ec27d1fde68fa528ac25e9d5c34b698e3cc7f684682cf180f3057c",
+  "status": "BLOCKED_PENDING_HARDWARE_TIMING_AND_COMPUTE_CONTRACT",
+  "C2": {
+    "D_SET": "TBD_AFTER_COMPUTE_CONTRACT",
+    "DELTA_SET": "TBD_AFTER_TAU_MEASUREMENT",
+    "matrix_status": "NOT_FROZEN"
+  },
+  "C4": {
+    "D_PRIMARY": "TBD",
+    "DELTA_PRIMARY": "TBD",
+    "primary_design": "ONE_DSTAR_ONE_DELTASTAR_ONLY",
+    "status": "NOT_FROZEN"
+  },
+  "rule": "D_MUST_BE_EXTERNALLY_OBSERVABLE_COMPUTE_BUDGET; DELTA_DERIVED_FROM_MEASURED_HARDWARE_TIMING",
+  "claim_ceiling": "DEPTH_HORIZON_SPEC_ONLY"
+}
