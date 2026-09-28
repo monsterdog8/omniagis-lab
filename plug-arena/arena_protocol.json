@@ -1,0 +1,30 @@
+{
+  "protocol": "PLUG_ARENA_FREEZE_001",
+  "slots_total": 32,
+  "competitors": 29,
+  "arbiters": 3,
+  "divisions": [
+    "ADVERSARIAL_SURVIVAL",
+    "EVIDENCE_SCIENCE",
+    "EXECUTION_PERFORMANCE",
+    "EXTERNAL_FIELD_API",
+    "FORGE_CREATIVE",
+    "TEMPORAL_REPLAY"
+  ],
+  "rounds": [
+    "HOME_TERRITORY",
+    "CROSS_DOMAIN",
+    "NEMESIS_PIT",
+    "ATTACK_SELF",
+    "ABYSS_HOLDOUT"
+  ],
+  "modes": ["SOLO", "ALLIANCE"],
+  "fatal_condition": "CRITICAL_UNSAFE_ACCEPT_IN_APPLICABLE_SCOPE",
+  "liveness_condition": "AT_LEAST_ONE_HEALTHY_ACCEPT_IN_APPLICABLE_SCOPE",
+  "neutral_states": ["UNKNOWN", "NOT_APPLICABLE"],
+  "public_attack_count": 20,
+  "sealed_holdout_count": 10,
+  "claim_ceiling": "FREEZE_AND_APP_PROTOTYPE_ONLY_NO_29_PLUGIN_RUNTIME_BATTLE_EXECUTED",
+  "adapter_contract": "arena_adapter_contract.json",
+  "judge_contract": "arena_judge_contract.json"
+}
