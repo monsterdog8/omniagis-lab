@@ -1,0 +1,24 @@
+{
+  "schema": "plug_arena_adapter_v1",
+  "purpose": "Normalize runtime outputs without converting subsystem PASS into global promotion.",
+  "required_output": {
+    "execution_status": "NOT_EXECUTED|EXECUTED|BLOCKED|ERROR",
+    "applicability": "APPLICABLE|NOT_APPLICABLE|UNKNOWN",
+    "disposition": "ACCEPT|BLOCK|UNKNOWN|NOT_APPLICABLE",
+    "local_property": "string",
+    "claim_ceiling": "string",
+    "evidence_refs": "array",
+    "trace_ref": "string|null",
+    "runtime_identity": "string|null",
+    "contract_version": "string",
+    "reason_codes": "array"
+  },
+  "forbidden_collapses": [
+    "SUBSYSTEM_PASS=>GLOBAL_PROMOTION",
+    "NOT_APPLICABLE=>PASS",
+    "UNKNOWN=>FAIL",
+    "HASH=>TRUTH",
+    "REPLAY=>INDEPENDENT_VALIDATION"
+  ],
+  "global_judge_rule": "Only GARDIEN may compute GLOBAL_PROMOTION from all applicable layer decisions; no competitor may self-promote globally."
+}
