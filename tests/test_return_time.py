@@ -90,3 +90,29 @@ class TestClassify:
         rts = ReturnTimeStatistics()
         stats = {"mean": 1.0, "count": 1}
         assert rts.classify(stats, max_allowed_mean=10.0) == "NO PASS"
+
+
+class TestClassifyDocumentedThreshold:
+    def test_min_required_returns_enforced(self) -> None:
+        rts = ReturnTimeStatistics()
+        stats = {"mean": 1.0, "count": 3}
+        assert (
+            rts.classify(
+                stats,
+                max_allowed_mean=10.0,
+                min_required_returns=5,
+            )
+            == "NO PASS"
+        )
+
+    def test_min_required_returns_allows_pass_when_met(self) -> None:
+        rts = ReturnTimeStatistics()
+        stats = {"mean": 1.0, "count": 5}
+        assert (
+            rts.classify(
+                stats,
+                max_allowed_mean=10.0,
+                min_required_returns=5,
+            )
+            == "PASS"
+        )
