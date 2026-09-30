@@ -218,7 +218,9 @@ def main(argv: Optional[list[str]] = None) -> int:
     else:
         print(output_json)
 
-    return 0 if result["report"]["verdict"] == "ACCEPTED" else 2
+    report = result.get("report") if isinstance(result, dict) else None
+    verdict = report.get("verdict") if isinstance(report, dict) else None
+    return 0 if verdict == "ACCEPTED" else 2
 
 
 if __name__ == "__main__":
