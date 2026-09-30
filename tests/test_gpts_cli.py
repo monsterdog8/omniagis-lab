@@ -233,12 +233,15 @@ class TestCmdBuildManifest:
 # ---------------------------------------------------------------------------
 
 class TestCmdSealAudit:
-    def test_empty_ledger_all_valid(self, tmp_path, capsys):
+    def test_empty_ledger_fails_closed(self, tmp_path, capsys):
         ledger = tmp_path / "seal.jsonl"
         ledger.write_text("", encoding="utf-8")
         args = argparse.Namespace(ledger=str(ledger), root=str(tmp_path), pretty=False)
         code = cmd_seal_audit(args)
-        assert code == 0
+        assert code == 1
+        result = json.loads(capsys.readouterr().out)
+        assert result["all_valid"] is False
+        assert result["records"] == 0
 
 
 class TestCmdPromote:
