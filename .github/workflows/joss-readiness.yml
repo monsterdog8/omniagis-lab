@@ -40,7 +40,7 @@ jobs:
       - name: Run frozen false-pass killshots
         run: |
           set -o pipefail
-          pytest -q tests/test_joss_false_pass_killshots.py 2>&1 | tee killshots_pytest.log
+          pytest -q --no-cov tests/test_joss_false_pass_killshots.py 2>&1 | tee killshots_pytest.log
 
       - name: Reproduce full test suite
         if: always()
@@ -58,3 +58,56 @@ jobs:
             killshots_pytest.log
           if-no-files-found: error
           retention-days: 30
+
+
+  wheel-audit:
+    needs: baseline
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact branch
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Build distribution artifacts
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install build
+          python -m build
+
+      - name: Inspect wheel package completeness
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import zipfile
+          wheel = next(Path("dist").glob("*.whl"))
+          with zipfile.ZipFile(wheel) as z:
+              names = z.namelist()
+          required = ("omniagis/", "gpts_core/", "phase_omega/")
+          missing = [prefix for prefix in required if not any(n.startswith(prefix) for n in names)]
+          print("WHEEL", wheel.name)
+          print("MEMBERS", len(names))
+          print("MISSING", missing)
+          if missing:
+              raise SystemExit("WHEEL_INCOMPLETE:" + ",".join(missing))
+          PY
+
+      - name: Install wheel in isolated venv
+        run: |
+          set -euo pipefail
+          python -m venv /tmp/omniagis-wheel
+          /tmp/omniagis-wheel/bin/python -m pip install --upgrade pip
+          /tmp/omniagis-wheel/bin/python -m pip install dist/*.whl
+          cd /tmp
+          /tmp/omniagis-wheel/bin/python - <<'PY'
+          import omniagis
+          import gpts_core
+          import phase_omega
+          print("WHEEL_IMPORTS_PASS")
+          PY
