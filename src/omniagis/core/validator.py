@@ -28,9 +28,12 @@ class EpsilonRobustnessValidator:
     """
 
     def __init__(self, epsilon: float = 1e-3) -> None:
+        epsilon = float(epsilon)
+        if not np.isfinite(epsilon):
+            raise ValueError("epsilon must be finite")
         if epsilon < 0:
             raise ValueError("epsilon must be non-negative")
-        self.epsilon = float(epsilon)
+        self.epsilon = epsilon
 
     # ------------------------------------------------------------------
     # public API
@@ -62,6 +65,12 @@ class EpsilonRobustnessValidator:
                 f"Shape mismatch: trajectory {trajectory.shape} vs "
                 f"reference {reference.shape}"
             )
+        if trajectory.size == 0:
+            raise ValueError("trajectory and reference must be non-empty")
+        if not np.all(np.isfinite(trajectory)):
+            raise ValueError("trajectory must contain only finite values")
+        if not np.all(np.isfinite(reference)):
+            raise ValueError("reference must contain only finite values")
 
         diff = trajectory - reference
         # pointwise L2 distances — shape [T]
