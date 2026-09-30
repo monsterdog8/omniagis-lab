@@ -111,3 +111,35 @@ jobs:
           import phase_omega
           print("WHEEL_IMPORTS_PASS")
           PY
+
+
+  examples:
+    needs: wheel-audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact branch
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Build and install wheel into isolated venv
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip build
+          python -m build
+          python -m venv /tmp/omniagis-examples
+          /tmp/omniagis-examples/bin/python -m pip install --upgrade pip
+          /tmp/omniagis-examples/bin/python -m pip install dist/*.whl
+
+      - name: Execute every documented example
+        run: |
+          set -euo pipefail
+          cd /tmp
+          for example in "$GITHUB_WORKSPACE"/examples/example_*.py; do
+            echo "=== $example ==="
+            /tmp/omniagis-examples/bin/python "$example"
+          done
