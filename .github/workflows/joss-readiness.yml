@@ -37,7 +37,13 @@ jobs:
           python -m pip install -e .
           python -m pip install pytest pytest-cov build
 
-      - name: Reproduce baseline test suite
+      - name: Run frozen false-pass killshots
+        run: |
+          set -o pipefail
+          pytest -q tests/test_joss_false_pass_killshots.py 2>&1 | tee killshots_pytest.log
+
+      - name: Reproduce full test suite
+        if: always()
         run: |
           set -o pipefail
           pytest -ra 2>&1 | tee baseline_pytest.log
@@ -47,6 +53,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: joss-baseline-pytest-log
-          path: baseline_pytest.log
+          path: |
+            baseline_pytest.log
+            killshots_pytest.log
           if-no-files-found: error
           retention-days: 30
