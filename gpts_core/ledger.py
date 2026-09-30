@@ -109,6 +109,8 @@ class AuditLedger:
             entries = list(self._entries)
         if not self._chained:
             return {"valid": True, "note": "Non-chained ledger — no chain to verify."}
+        if not entries:
+            return {"valid": False, "first_error": None, "reason": "EMPTY_LEDGER", "entries_checked": 0}
         prev = "sha256:" + "0" * 64
         for i, e in enumerate(entries):
             if e.get("prev_hash") != prev:
