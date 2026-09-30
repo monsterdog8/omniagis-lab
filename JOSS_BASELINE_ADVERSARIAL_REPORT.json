@@ -1,0 +1,86 @@
+{
+  "report_id": "JOSS_BASELINE_ADVERSARIAL_0001",
+  "repository": "monsterdog8/omniagis-lab",
+  "baseline_source_commit": "47ac97625ba6fda077331c085eaa1c40868bec79",
+  "measurement_commit": "c7de2c2c404be7ea5667c128155b896df0a404b4",
+  "hosted_run_id": 36747485956,
+  "measurement_environment": {
+    "os": "Ubuntu 24.04.5",
+    "python": "3.13.15",
+    "github_runner": "2.337.0"
+  },
+  "observed_suite": {
+    "collected": 893,
+    "passed": 858,
+    "failed": 35,
+    "warnings": 8,
+    "coverage_percent": 97.09,
+    "note": "Includes newly frozen false-pass killshot tests; not comparable as a post-repair success metric to the pre-killshot suite."
+  },
+  "baseline_reproduction_run": {
+    "run_id": 36747263309,
+    "commit": "62bdbe59a322edae036ab7dc5797aa26824b8567",
+    "collected": 856,
+    "passed": 849,
+    "failed": 7,
+    "warnings": 8,
+    "coverage_percent": 96.98
+  },
+  "confirmed_false_passes": [
+    "EMPTY_MANIFEST_PASS",
+    "MISSING_ARTIFACTS_FIELD_PASS",
+    "DUPLICATE_ARTIFACT_IDENTITY_PASS",
+    "MANIFEST_SELF_REFERENCE_NOT_FAIL_CLOSED",
+    "NONFINITE_EPSILON_ACCEPTED",
+    "NONFINITE_TRAJECTORY_ACCEPTED",
+    "NONFINITE_REFERENCE_ACCEPTED",
+    "NONFINITE_RETURN_TOLERANCE_ACCEPTED",
+    "NONFINITE_RETURN_SERIES_ACCEPTED",
+    "NEGATIVE_INFINITY_MEAN_CAN_PASS_CLASSIFY",
+    "NONFINITE_CLASSIFICATION_LIMIT_ACCEPTED",
+    "ZERO_LENGTH_CHAINED_LEDGER_VALID"
+  ],
+  "preserved_original_failures": [
+    "tests/test_bundle.py::TestChainCheck::test_chain_ok_when_prev_present_and_hash_matches",
+    "tests/test_bundle.py::TestChainCheck::test_chain_missing_prev_sha256_fails_closed",
+    "tests/test_gpts_cli.py::TestCmdSealAudit::test_empty_ledger_all_valid",
+    "tests/test_gpts_promotion.py::TestReplayJsonlLedger::test_non_monotonic_event_id_fails",
+    "tests/test_gpts_promotion.py::TestReplayJsonlLedger::test_bad_parent_hash_fails",
+    "tests/test_validatorgate_pipeline.py::test_exp_rt_runner_main_writes_json_without_stderr",
+    "tests/test_validatorgate_pipeline.py::test_epsilon_sweep_main_writes_json_without_stderr"
+  ],
+  "test_contract_contradictions": [
+    {
+      "id": "CONTRADICTION_BUNDLE_CHAIN_001",
+      "evidence": "A test named chain_ok... contains mutually exclusive assertions CHAIN_HASH_MISSING/FAIL_CLOSED and PASS for the same result.",
+      "decision": "TEST_DEFECT_CONFIRMED",
+      "mutation": "Do not change until implementation false-pass repairs are separated."
+    },
+    {
+      "id": "CONTRADICTION_BUNDLE_CHAIN_002",
+      "evidence": "A test named missing_prev_sha256_fails_closed asserts CHAIN_OK despite its docstring requiring a hash.",
+      "decision": "TEST_DEFECT_CONFIRMED",
+      "mutation": "Do not change until implementation false-pass repairs are separated."
+    },
+    {
+      "id": "CONTRADICTION_EMPTY_SEAL_001",
+      "evidence": "CLI test expects exit 0 for an empty seal ledger while validate_seal_ledger explicitly defines empty ledger as all_valid=false.",
+      "decision": "TEST_STALE_AGAINST_FAIL_CLOSED_CONTRACT",
+      "mutation": "Preserve before later test correction."
+    },
+    {
+      "id": "REASON_CODE_ORDERING_001",
+      "evidence": "Replay tests expect later semantic reason codes while implementation rejects earlier on missing/malformed parent metadata.",
+      "decision": "FAIL_CLOSED_BEHAVIOR_CORRECT_REASON_EXPECTATION_REVIEW_REQUIRED",
+      "mutation": "Do not weaken rejection merely to match reason text."
+    },
+    {
+      "id": "CLI_SCHEMA_ASSUMPTION_001",
+      "evidence": "exp_rt_runner.main and epsilon_sweep.main raise KeyError if an injected execution result lacks report/summary.",
+      "decision": "IMPLEMENTATION_ROBUSTNESS_DEFECT",
+      "mutation": "Patch forward to explicit non-success return without suppressing JSON output."
+    }
+  ],
+  "claim_ceiling": "HOSTED_BASELINE_AND_ADVERSARIAL_REPRODUCTION_ONLY",
+  "status": "FAILURES_PRESERVED_READY_FOR_PATCH_FORWARD"
+}
