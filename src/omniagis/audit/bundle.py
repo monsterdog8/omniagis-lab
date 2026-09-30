@@ -147,6 +147,7 @@ class BundleManifest:
     description: str
     artifacts: List[ArtifactSpec] = field(default_factory=list)
     source_path: str = ""
+    validation_errors: List[str] = field(default_factory=list)
 
 
 @dataclass
@@ -188,6 +189,8 @@ class BundleAuditReport:
         FAIL_CLOSED — any artifact missing, hash mismatch, or broken chain.
         PARTIAL PASS — all present; some hashes/chains unverified (no declared hash/prev).
         """
+        if self.manifest.validation_errors or not self.results:
+            return FAIL_CLOSED
         if any(r.verdict == FAIL_CLOSED for r in self.results):
             return FAIL_CLOSED
         if all(r.verdict == PASS for r in self.results):
@@ -197,7 +200,9 @@ class BundleAuditReport:
     @property
     def fail_reasons(self) -> List[str]:
         """Unique top-level failure reasons across all artifacts."""
-        reasons: list[str] = []
+        reasons: list[str] = list(self.manifest.validation_errors)
+        if not self.results and "EMPTY_MANIFEST" not in reasons:
+            reasons.append("EMPTY_MANIFEST")
         for r in self.results:
             if not r.present:
                 reasons.append(REASON_ARTIFACT_MISSING)
@@ -266,18 +271,42 @@ class BundleAuditor:
         with open(manifest_path, "r", encoding="utf-8") as fh:
             data = json.load(fh)
 
+        validation_errors: List[str] = []
+        raw_artifacts = data.get("artifacts")
+        if raw_artifacts is None:
+            validation_errors.append("ARTIFACTS_FIELD_MISSING")
+            raw_artifacts = []
+        elif not isinstance(raw_artifacts, list):
+            validation_errors.append("ARTIFACTS_FIELD_NOT_LIST")
+            raw_artifacts = []
+
         artifacts: List[ArtifactSpec] = []
-        for entry in data.get("artifacts", []):
-            artifacts.append(
-                ArtifactSpec(
-                    name=str(entry.get("name", "")),
-                    path=str(entry.get("path", "")),
-                    sha256=entry.get("sha256") or None,
-                    prev_artifact_path=entry.get("prev_artifact_path") or None,
-                    prev_artifact_sha256=entry.get("prev_artifact_sha256") or None,
-                    synthetic_demo=bool(entry.get("synthetic_demo", False)),
-                )
+        seen_identities: set[tuple[str, str]] = set()
+        for entry in raw_artifacts:
+            if not isinstance(entry, dict):
+                validation_errors.append("ARTIFACT_ENTRY_NOT_OBJECT")
+                continue
+
+            spec = ArtifactSpec(
+                name=str(entry.get("name", "")),
+                path=str(entry.get("path", "")),
+                sha256=entry.get("sha256") or None,
+                prev_artifact_path=entry.get("prev_artifact_path") or None,
+                prev_artifact_sha256=entry.get("prev_artifact_sha256") or None,
+                synthetic_demo=bool(entry.get("synthetic_demo", False)),
             )
+            identity = (spec.name, os.path.normpath(spec.path))
+            if identity in seen_identities:
+                validation_errors.append("DUPLICATE_ARTIFACT_IDENTITY")
+            seen_identities.add(identity)
+
+            if _resolve(spec.path, os.path.dirname(manifest_path)) == manifest_path:
+                validation_errors.append("MANIFEST_SELF_REFERENCE")
+
+            artifacts.append(spec)
+
+        if not artifacts:
+            validation_errors.append("EMPTY_MANIFEST")
 
         return BundleManifest(
             version=str(data.get("version", "unknown")),
@@ -285,6 +314,7 @@ class BundleAuditor:
             description=str(data.get("description", "")),
             artifacts=artifacts,
             source_path=manifest_path,
+            validation_errors=validation_errors,
         )
 
     # ------------------------------------------------------------------
