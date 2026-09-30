@@ -324,7 +324,7 @@ class TestReplayJsonlLedger:
         assert result["reason"] == "EMPTY_LINE"
 
     def test_non_monotonic_event_id_fails(self, tmp_path):
-        e1 = _make_event("000002")
+        e1 = _make_event("000001")
         e2 = _make_event("000001")
         f = tmp_path / "ledger.jsonl"
         f.write_text(json.dumps(e1) + "\n" + json.dumps(e2), encoding="utf-8")
@@ -334,7 +334,7 @@ class TestReplayJsonlLedger:
 
     def test_bad_parent_hash_fails(self, tmp_path):
         e1 = _make_event("000001")
-        e2 = _make_event("000002", prev_hash="wrong_hash_here")
+        e2 = _make_event("000002", prev_hash="0" * 64)
         f = tmp_path / "ledger.jsonl"
         f.write_text(json.dumps(e1) + "\n" + json.dumps(e2), encoding="utf-8")
         result = replay_jsonl_ledger(f)
