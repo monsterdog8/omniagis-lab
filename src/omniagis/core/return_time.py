@@ -18,9 +18,12 @@ class ReturnTimeStatistics:
     """
 
     def __init__(self, tolerance: float = 0.05) -> None:
+        tolerance = float(tolerance)
+        if not np.isfinite(tolerance):
+            raise ValueError("tolerance must be finite")
         if tolerance < 0:
             raise ValueError("tolerance must be non-negative")
-        self.tolerance = float(tolerance)
+        self.tolerance = tolerance
 
     # ------------------------------------------------------------------
     # public API
@@ -51,7 +54,16 @@ class ReturnTimeStatistics:
         series = np.asarray(series, dtype=float)
         if series.ndim != 1:
             raise ValueError("series must be 1-D")
+        if not np.all(np.isfinite(series)):
+            raise ValueError("series must contain only finite values")
+        target_value = float(target_value)
+        if not np.isfinite(target_value):
+            raise ValueError("target_value must be finite")
         effective_tol = self.tolerance if tol is None else float(tol)
+        if not np.isfinite(effective_tol):
+            raise ValueError("tol must be finite")
+        if effective_tol < 0:
+            raise ValueError("tol must be non-negative")
         (indices,) = np.where(np.abs(series - target_value) <= effective_tol)
         return indices.astype(int)
 
@@ -99,10 +111,13 @@ class ReturnTimeStatistics:
         -------
         "PASS" | "PARTIAL PASS" | "NO PASS"
         """
-        mean = stats.get("mean", float("inf"))
+        mean = float(stats.get("mean", float("inf")))
         count = stats.get("count", 0)
+        max_allowed_mean = float(max_allowed_mean)
 
-        if count < 2:
+        if not np.isfinite(max_allowed_mean) or max_allowed_mean < 0:
+            raise ValueError("max_allowed_mean must be finite and non-negative")
+        if count < 2 or not np.isfinite(mean):
             return "NO PASS"
 
         if mean <= max_allowed_mean:
