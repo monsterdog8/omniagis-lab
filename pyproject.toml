@@ -29,4 +29,6 @@ exclude_lines = [
 ]
 
 [tool.setuptools.packages.find]
-where = ["src"]
+where = ["src", "."]
+include = ["omniagis*", "gpts_core*", "phase_omega*"]
+namespaces = false
