@@ -1,0 +1,52 @@
+name: joss-readiness-baseline
+
+on:
+  push:
+    branches:
+      - joss-readiness-0001
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  baseline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact branch
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Capture environment
+        run: |
+          set -euo pipefail
+          python --version
+          python -m pip --version
+          uname -a
+
+      - name: Install baseline dependencies
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install -e .
+          python -m pip install pytest pytest-cov build
+
+      - name: Reproduce baseline test suite
+        run: |
+          set -o pipefail
+          pytest -ra 2>&1 | tee baseline_pytest.log
+
+      - name: Upload baseline log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: joss-baseline-pytest-log
+          path: baseline_pytest.log
+          if-no-files-found: error
+          retention-days: 30
