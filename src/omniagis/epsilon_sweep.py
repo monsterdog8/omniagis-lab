@@ -309,7 +309,9 @@ def main(argv: Optional[list[str]] = None) -> int:
     else:
         print(output_json)
 
-    return 0 if result["summary"]["n_fail_closed"] == 0 else 2
+    summary = result.get("summary") if isinstance(result, dict) else None
+    n_fail_closed = summary.get("n_fail_closed") if isinstance(summary, dict) else None
+    return 0 if n_fail_closed == 0 else 2
 
 
 if __name__ == "__main__":
