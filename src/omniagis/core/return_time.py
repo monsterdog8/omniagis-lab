@@ -104,6 +104,7 @@ class ReturnTimeStatistics:
         self,
         stats: Dict[str, float],
         max_allowed_mean: float,
+        min_required_returns: int = 2,
     ) -> str:
         """Classify return-time statistics.
 
@@ -114,10 +115,13 @@ class ReturnTimeStatistics:
         mean = float(stats.get("mean", float("inf")))
         count = stats.get("count", 0)
         max_allowed_mean = float(max_allowed_mean)
+        min_required_returns = int(min_required_returns)
 
         if not np.isfinite(max_allowed_mean) or max_allowed_mean < 0:
             raise ValueError("max_allowed_mean must be finite and non-negative")
-        if count < 2 or not np.isfinite(mean):
+        if min_required_returns < 1:
+            raise ValueError("min_required_returns must be >= 1")
+        if count < min_required_returns or not np.isfinite(mean):
             return "NO PASS"
 
         if mean <= max_allowed_mean:
