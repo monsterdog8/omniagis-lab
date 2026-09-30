@@ -195,8 +195,7 @@ class TestChainCheck:
         })
         report = BundleAuditor().audit(str(mpath))
         r = report.results[0]
-        assert r.chain_reason == REASON_CHAIN_HASH_MISSING
-        assert r.verdict == FAIL_CLOSED
+        assert r.chain_reason == REASON_CHAIN_OK
         assert r.verdict == PASS
 
     def test_chain_prev_missing(self, tmp_path):
@@ -257,7 +256,9 @@ class TestChainCheck:
         })
         report = BundleAuditor().audit(str(mpath))
         r = report.results[0]
-        assert r.chain_reason == REASON_CHAIN_OK
+        assert r.chain_reason == REASON_CHAIN_HASH_MISSING
+        assert r.verdict == FAIL_CLOSED
+        assert report.global_verdict == FAIL_CLOSED
 
 
 # ---------------------------------------------------------------------------
